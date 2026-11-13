@@ -199,8 +199,8 @@ class IsatPageState extends State<IsatPage> {
       context: context,
       builder:
           (ctx) => DeleteDialog(
-            title: 'ISPAM Record',
-            itemName: 'ISPAM',
+            title: 'SPAM Record',
+            itemName: 'SPAM',
             onDelete: () async {
               Navigator.pop(ctx);
               try {
@@ -210,7 +210,7 @@ class IsatPageState extends State<IsatPage> {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text(
-                      'ISPAM deleted successfully',
+                      'SPAM deleted successfully',
                       style: GoogleFonts.plusJakartaSans(),
                     ),
                   ).show(context);
@@ -219,7 +219,7 @@ class IsatPageState extends State<IsatPage> {
                 MotionToast.error(
                   toastAlignment: Alignment.topCenter,
                   description: Text(
-                    'Failed to delete ISPAM',
+                    'Failed to delete SPAM',
                     style: GoogleFonts.plusJakartaSans(),
                   ),
                 ).show(context);
@@ -575,7 +575,7 @@ class IsatPageState extends State<IsatPage> {
           ),
           const SizedBox(height: 6),
           Text(isat.office?.name ?? '', style: _cellStyle),
-          Text(isat.employeeName ?? '', style: _cellStyle),
+          Text(isat.employeeName, style: _cellStyle),
           const SizedBox(height: 4),
           Text(_periodText(isat), style: _cellStyle),
         ],
@@ -600,8 +600,8 @@ class IsatPageState extends State<IsatPage> {
             const SizedBox(height: 10),
             Text(
               _statusFilter == 'All'
-                  ? "No ISPAM available"
-                  : "No ${_statusFilter.toLowerCase()} ISPAM found",
+                  ? "No SPAM available"
+                  : "No ${_statusFilter.toLowerCase()} SPAM found",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],

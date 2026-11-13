@@ -214,6 +214,18 @@ class IsatServices {
     }
   }
 
+  Future<bool> confirmIsat(int isatId, String userId) async {
+    try {
+      final url = '${ApiEndpoint().isat}/confirm/$isatId/$userId';
+      final response = await AuthenticatedRequest.post(dio, url);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } on DioException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> deleteIsat(String isatId) async {
     final url = '${ApiEndpoint().isat}/$isatId';
     await AuthenticatedRequest.delete(dio, url);
