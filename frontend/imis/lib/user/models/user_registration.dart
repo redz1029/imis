@@ -20,6 +20,7 @@ class UserRegistration {
   DateTime? lockoutEnd;
   String? accessToken;
   String? refreshToken;
+  bool? isLockedOut;
 
   UserRegistration(
     this.id,
@@ -35,6 +36,7 @@ class UserRegistration {
     this.accessToken,
     this.refreshToken,
     this.lockoutEnd,
+    this.isLockedOut,
   );
 
   factory UserRegistration.fromJson(Map<String, dynamic> json) =>

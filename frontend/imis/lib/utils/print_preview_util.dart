@@ -268,17 +268,17 @@ Future<void> viewAuditorSummaryNarrativeReport(
   context: context,
 );
 
-Future<void> openPgsDeliverableAccomplishmentReport({
-  required int periodId,
-  required int officeId,
-  required int pgsId,
-  BuildContext? context,
-}) => _openPdfPreviewWithParams(
-  endpoint:
-      '${ApiEndpoint().filterAccomplishmentReport}/?periodId=$periodId&officeId=$officeId&pgsId=$pgsId',
-  reportName: 'PGS_Deliverable_Accomplishment_Report',
-  context: context,
-);
+// Future<void> openPgsDeliverableAccomplishmentReport({
+//   required int periodId,
+//   required int officeId,
+//   required int pgsId,
+//   BuildContext? context,
+// }) => _openPdfPreviewWithParams(
+//   endpoint:
+//       '${ApiEndpoint().filterAccomplishmentReport}/?periodId=$periodId&officeId=$officeId&pgsId=$pgsId',
+//   reportName: 'PGS_Deliverable_Accomplishment_Report',
+//   context: context,
+// );
 
 Future<void> openProcessCoreSupportPrintPreview(
   String processCoreId,

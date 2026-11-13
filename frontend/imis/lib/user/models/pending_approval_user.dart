@@ -4,16 +4,27 @@ part 'pending_approval_user.g.dart';
 
 @JsonSerializable()
 class PendingApprovalUser {
+  @JsonKey(defaultValue: '')
   final String id;
+  @JsonKey(defaultValue: '')
   final String userName;
+  @JsonKey(defaultValue: '')
   final String email;
+  @JsonKey(defaultValue: '')
   final String firstName;
+  @JsonKey(defaultValue: '')
   final String middleName;
+  @JsonKey(defaultValue: '')
   final String lastName;
+  @JsonKey(defaultValue: '')
   final String position;
+  @JsonKey(defaultValue: false)
   final bool lockoutEnabled;
+  @JsonKey(defaultValue: false)
   final bool isLockedOut;
   final DateTime? lockoutEnd;
+  final String? office;
+  @JsonKey(defaultValue: false)
   final bool isPendingApproval;
 
   PendingApprovalUser({
@@ -27,6 +38,7 @@ class PendingApprovalUser {
     required this.lockoutEnabled,
     required this.isLockedOut,
     required this.lockoutEnd,
+    this.office,
     required this.isPendingApproval,
   });
 

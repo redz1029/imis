@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/user/services/user_lockout_service.dart';
 import 'package:imis/user/services/users_profile_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
@@ -26,6 +27,7 @@ class UserProfilePage extends StatefulWidget {
 
 class UserProfileState extends State<UserProfilePage> {
   final _userProfileService = UsersProfileService(Dio());
+  final _lockoutService = UserLockoutService(Dio());
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -116,10 +118,6 @@ class UserProfileState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    fetchUserProfile();
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
     userSearchUtil = FilterSearchResultUtil<UserRegistration>(
       paginationUtils: _paginationUtils,
       endpoint: ApiEndpoint().getUser,
@@ -139,7 +137,6 @@ class UserProfileState extends State<UserProfilePage> {
   @override
   void dispose() {
     isSearchfocus.dispose();
-    super.dispose();
     focusNewPassword.dispose();
     super.dispose();
   }
@@ -171,6 +168,7 @@ class UserProfileState extends State<UserProfilePage> {
     String? prefix,
     String? suffix,
     String? position,
+    bool? isLockOut,
     bool isEditingpassword = false,
   }) {
     userNameController.text = userName ?? '';
@@ -186,7 +184,7 @@ class UserProfileState extends State<UserProfilePage> {
         JobPositions.positions.contains(position) ? position : null;
     final isEdit = id != null;
     final formKey = GlobalKey<FormState>();
-
+    bool lockValue = isLockOut ?? false;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -432,29 +430,42 @@ class UserProfileState extends State<UserProfilePage> {
                                   '',
                                   '',
                                   null,
+                                  lockValue,
                                 );
 
-                                if (id == null) {
-                                  await _userProfileService.createUser(
-                                    userProfile,
-                                  );
-                                  MotionToast.success(
+                                try {
+                                  if (id == null) {
+                                    await _userProfileService.createUser(
+                                      userProfile,
+                                    );
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'Saved successfully',
+                                      ),
+                                    ).show(dialogContext);
+                                  } else {
+                                    await _userProfileService.updateUser(
+                                      userProfile,
+                                    );
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'Updated successfully',
+                                      ),
+                                    ).show(dialogContext);
+                                    await fetchUserProfile();
+                                  }
+                                  Navigator.pop(dialogContext);
+                                } catch (e) {
+                                  debugPrint(e.toString());
+                                  MotionToast.error(
                                     toastAlignment: Alignment.topCenter,
-                                    description: Text('Saved successfully'),
+                                    description: const Text(
+                                      'Failed to update password',
+                                    ),
                                   ).show(dialogContext);
-                                } else {
-                                  await _userProfileService.updateUser(
-                                    userProfile,
-                                  );
-                                  MotionToast.success(
-                                    toastAlignment: Alignment.topCenter,
-                                    description: Text('Updated successfully'),
-                                  ).show(dialogContext);
-                                  setState(() {
-                                    fetchUserProfile();
-                                  });
                                 }
-                                Navigator.pop(dialogContext);
                               }
                             },
                           ),
@@ -482,6 +493,8 @@ class UserProfileState extends State<UserProfilePage> {
     String? prefix,
     String? suffix,
     String? position,
+    bool? isLockOut,
+
     bool isEditingpassword = false,
   }) {
     userNameController.text = userName ?? '';
@@ -498,7 +511,8 @@ class UserProfileState extends State<UserProfilePage> {
 
     final isEdit = id != null;
     final formKey = GlobalKey<FormState>();
-
+    bool lockValue = isLockOut ?? false;
+    final bool originalLock = isLockOut ?? false;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -683,7 +697,45 @@ class UserProfileState extends State<UserProfilePage> {
                               SizedBox(height: 8),
                               _positionComboBox(setDialogState),
                               SizedBox(height: 20),
-
+                              _sectionLabel('Account Status'),
+                              SizedBox(height: 8),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: kBackground,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: kBorder),
+                                ),
+                                child: SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    'Lock Account',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: kText,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    lockValue
+                                        ? 'Account is locked'
+                                        : 'Account is unlocked',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      color: kMuted,
+                                    ),
+                                  ),
+                                  value: lockValue,
+                                  activeColor: primaryColor,
+                                  onChanged:
+                                      (v) =>
+                                          setDialogState(() => lockValue = v),
+                                ),
+                              ),
+                              SizedBox(height: 20),
                               if (id == null) ...[
                                 _sectionLabel('Security'),
                                 SizedBox(height: 12),
@@ -921,29 +973,58 @@ class UserProfileState extends State<UserProfilePage> {
                                   '',
                                   '',
                                   null,
+                                  originalLock,
                                 );
 
-                                if (id == null) {
-                                  await _userProfileService.createUser(
-                                    userProfile,
-                                  );
-                                  MotionToast.success(
+                                try {
+                                  if (id == null) {
+                                    await _userProfileService.createUser(
+                                      userProfile,
+                                    );
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'Saved successfully',
+                                      ),
+                                    ).show(dialogContext);
+                                  } else {
+                                    await _userProfileService.updateUser(
+                                      userProfile,
+                                    );
+
+                                    // Lock / unlock gamit ang lockout service
+                                    // (parehas sa User Management)
+                                    if (lockValue != originalLock) {
+                                      if (lockValue) {
+                                        await _lockoutService.lockUser(
+                                          id,
+                                          permanent: true,
+                                        );
+                                      } else {
+                                        await _lockoutService.unlockUser(id);
+                                      }
+                                    }
+
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'Updated successfully',
+                                      ),
+                                    ).show(dialogContext);
+                                    await fetchUserProfile();
+                                  }
+                                  Navigator.pop(dialogContext);
+                                } catch (e) {
+                                  debugPrint(e.toString());
+                                  MotionToast.error(
                                     toastAlignment: Alignment.topCenter,
-                                    description: Text('Saved successfully'),
+                                    description: Text(
+                                      id == null
+                                          ? 'Failed to save user'
+                                          : 'Failed to update user',
+                                    ),
                                   ).show(dialogContext);
-                                } else {
-                                  await _userProfileService.updateUser(
-                                    userProfile,
-                                  );
-                                  MotionToast.success(
-                                    toastAlignment: Alignment.topCenter,
-                                    description: Text('Updated successfully'),
-                                  ).show(dialogContext);
-                                  setState(() {
-                                    fetchUserProfile();
-                                  });
                                 }
-                                Navigator.pop(dialogContext);
                               },
                             ),
                           ),
@@ -1528,6 +1609,8 @@ class UserProfileState extends State<UserProfilePage> {
                                                             suffix: user.suffix,
                                                             position:
                                                                 user.position,
+                                                            isLockOut:
+                                                                user.isLockedOut,
                                                           ),
                                                 ),
                                                 IconButton(
@@ -1549,6 +1632,8 @@ class UserProfileState extends State<UserProfilePage> {
                                                         prefix: user.prefix,
                                                         suffix: user.suffix,
                                                         position: user.position,
+                                                        isLockOut:
+                                                            user.isLockedOut,
                                                       ),
                                                 ),
                                                 IconButton(
@@ -1649,6 +1734,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                 prefix: user.prefix,
                                                 suffix: user.suffix,
                                                 position: user.position,
+                                                isLockOut: user.isLockedOut,
                                               );
                                             }
                                             if (value == 'edit') {
@@ -1663,6 +1749,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                 prefix: user.prefix,
                                                 suffix: user.suffix,
                                                 position: user.position,
+                                                isLockOut: user.isLockedOut,
                                               );
                                             }
                                             if (value == 'delete') {

@@ -19,13 +19,6 @@ import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/ISO/IQA/notifications/models/iqa_notification.dart';
 import 'package:imis/ISO/IQA/notifications/services/iqa_notification_service.dart';
-// import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
-// import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
-// import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
@@ -56,6 +49,7 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/qms_documents/pages/procedures_list_page.dart';
+// import 'package:imis/qms_documents/pages/procedures_list_page.dart';
 import 'package:imis/qms_documents/policy_signatory_template/pages/policy_signatory_template_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
@@ -608,7 +602,6 @@ class SidebarState extends State<Sidebar> {
   }
 
   Future<void> _showNotificationMenu(BuildContext context) async {
-    // Up to date when it opens, not up to a minute old.
     await _loadIqaNotifications();
     if (!mounted) return;
 
@@ -1445,6 +1438,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 3) {
       if (selectedSubPage == 0) return const ProceduresListPage();
     }
+
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
@@ -1631,17 +1625,12 @@ class SidebarState extends State<Sidebar> {
           NavChild('IQA History', 7),
         ],
       ),
-      // NavGroup(
-      //   icon: Icons.fact_check_outlined,
-      //   label: 'QMS Documents',
-      //   pageIndex: 3,
-      //   children: const [
-      //     NavChild('Procedures', 0),
-      //     // NavChild('Auditor Offices', 1),
-      //     // NavChild('Auditor Team', 2),
-      //     // NavChild('ISO Announcements', 3),
-      //   ],
-      // ),
+      NavGroup(
+        icon: Icons.fact_check_outlined,
+        label: 'QMS Documents',
+        pageIndex: 3,
+        children: const [NavChild('Procedures', 0)],
+      ),
       NavGroup(
         icon: Icons.settings_outlined,
         label: 'Settings',

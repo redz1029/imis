@@ -163,6 +163,7 @@ class OfficePageState extends State<OfficePage> {
     bool isRowversion = false,
     int? officeType,
     int? parentOffice,
+    bool activeOffice = false,
   }) async {
     await _officeService.getParentOffice();
 
@@ -187,12 +188,12 @@ class OfficePageState extends State<OfficePage> {
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
-          builder: (ctx, setDialog) {
+          builder: (dialogCtx, setDialog) {
             return Dialog(
               backgroundColor: Colors.transparent,
               child: Container(
                 width: 450,
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: kSurface,
                   borderRadius: BorderRadius.circular(24),
@@ -200,7 +201,7 @@ class OfficePageState extends State<OfficePage> {
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 32,
-                      offset: Offset(0, 12),
+                      offset: const Offset(0, 12),
                     ),
                   ],
                 ),
@@ -210,6 +211,7 @@ class OfficePageState extends State<OfficePage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Header
                       Row(
                         children: [
                           Container(
@@ -225,7 +227,7 @@ class OfficePageState extends State<OfficePage> {
                               size: 22,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -253,6 +255,8 @@ class OfficePageState extends State<OfficePage> {
                       const SizedBox(height: 20),
                       Divider(color: kBorder, height: 1),
                       const SizedBox(height: 20),
+
+                      // Fields
                       dialogField(
                         label: 'Office Name',
                         controller: officeController,
@@ -262,7 +266,7 @@ class OfficePageState extends State<OfficePage> {
                                     ? 'Please fill out this field'
                                     : null,
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       SearchDropdown<Map<String, dynamic>>(
                         label: 'Office Type',
                         hintText: 'Select Office Type',
@@ -281,8 +285,7 @@ class OfficePageState extends State<OfficePage> {
                                     ? 'Please select office type'
                                     : null,
                       ),
-                      SizedBox(height: 8),
-
+                      const SizedBox(height: 8),
                       SearchDropdown<Map<String, dynamic>>(
                         label: 'Parent Office',
                         hintText: 'Select Parent Office',
@@ -301,13 +304,59 @@ class OfficePageState extends State<OfficePage> {
                                     ? 'Please select parent office'
                                     : null,
                       ),
+                      const SizedBox(height: 16),
 
+                      // Active switch
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Office',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently active office',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: activeOffice,
+                              onChanged:
+                                  (val) => setDialog(() => activeOffice = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 24),
+
+                      // Buttons
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pop(dialogCtx),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: kBorder),
                                 padding: const EdgeInsets.symmetric(
@@ -326,36 +375,30 @@ class OfficePageState extends State<OfficePage> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: ElevatedButton.icon(
-                              label: Text(
-                                isEdit ? 'Update' : 'Save',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                            child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryColor,
                                 elevation: 0,
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(
-                                    8,
-                                  ),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               onPressed: () async {
                                 if (!formKey.currentState!.validate()) return;
+
                                 final confirmed = await showDialog<bool>(
-                                  context: context,
+                                  context: dialogCtx,
                                   builder:
-                                      (ctx) => Dialog(
+                                      (confirmCtx) => Dialog(
                                         backgroundColor: Colors.transparent,
                                         child: Container(
                                           width: 340,
-                                          padding: EdgeInsets.all(24),
+                                          padding: const EdgeInsets.all(24),
                                           decoration: BoxDecoration(
                                             color: kSurface,
                                             borderRadius: BorderRadius.circular(
@@ -367,7 +410,7 @@ class OfficePageState extends State<OfficePage> {
                                                   alpha: 0.12,
                                                 ),
                                                 blurRadius: 32,
-                                                offset: Offset(0, 12),
+                                                offset: const Offset(0, 12),
                                               ),
                                             ],
                                           ),
@@ -383,13 +426,13 @@ class OfficePageState extends State<OfficePage> {
                                                   borderRadius:
                                                       BorderRadius.circular(14),
                                                 ),
-                                                child: Icon(
+                                                child: const Icon(
                                                   Icons.help_outline_rounded,
                                                   color: primaryColor,
                                                   size: 26,
                                                 ),
                                               ),
-                                              SizedBox(height: 14),
+                                              const SizedBox(height: 14),
                                               Text(
                                                 isEdit
                                                     ? 'Confirm Update'
@@ -415,20 +458,23 @@ class OfficePageState extends State<OfficePage> {
                                                     ),
                                                 textAlign: TextAlign.center,
                                               ),
+                                              const SizedBox(height: 20),
                                               Row(
                                                 children: [
                                                   Expanded(
                                                     child: OutlinedButton(
                                                       onPressed:
                                                           () => Navigator.pop(
-                                                            ctx,
+                                                            confirmCtx,
                                                             false,
                                                           ),
                                                       style:
                                                           OutlinedButton.styleFrom(
-                                                            side: BorderSide(
-                                                              color: kBorder,
-                                                            ),
+                                                            side:
+                                                                const BorderSide(
+                                                                  color:
+                                                                      kBorder,
+                                                                ),
                                                           ),
                                                       child: Text(
                                                         'No',
@@ -447,7 +493,7 @@ class OfficePageState extends State<OfficePage> {
                                                     child: ElevatedButton(
                                                       onPressed:
                                                           () => Navigator.pop(
-                                                            ctx,
+                                                            confirmCtx,
                                                             true,
                                                           ),
                                                       style: ElevatedButton.styleFrom(
@@ -485,27 +531,39 @@ class OfficePageState extends State<OfficePage> {
                                         ),
                                       ),
                                 );
+
                                 if (confirmed != true) return;
+
                                 final office = Office(
                                   id: int.tryParse(id ?? '0') ?? 0,
                                   name: officeController.text,
                                   officeTypeId: selectedOfficeType,
                                   parentOfficeId: selectedParentOffice,
                                   isDeleted: false,
-                                  isActive: true,
+                                  isActive: activeOffice,
                                 );
+
                                 await _officeService.createOrUpdateOffice(
                                   office,
                                 );
+
+                                if (!mounted) return;
                                 setState(() {
                                   fetchOffices();
                                 });
                                 MotionToast.success(
                                   toastAlignment: Alignment.topCenter,
-                                  description: Text('Saved successfully'),
+                                  description: const Text('Saved successfully'),
                                 ).show(context);
-                                Navigator.pop(context);
+                                Navigator.pop(dialogCtx);
                               },
+                              child: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -662,7 +720,16 @@ class OfficePageState extends State<OfficePage> {
                                 ),
                               ),
                             ),
-
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Active",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
                             Expanded(
                               flex: 3,
                               child: Text(
@@ -744,7 +811,17 @@ class OfficePageState extends State<OfficePage> {
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
-
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              office.isActive == true
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
                                           Expanded(
                                             flex: 3,
                                             child: Row(
@@ -774,6 +851,9 @@ class OfficePageState extends State<OfficePage> {
                                                         parentOffice:
                                                             fetchedOffice
                                                                 .parentOfficeId,
+                                                        activeOffice:
+                                                            fetchedOffice
+                                                                .isActive,
                                                       );
                                                     } catch (e) {
                                                       debugPrint(

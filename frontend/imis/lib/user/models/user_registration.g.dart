@@ -24,6 +24,7 @@ UserRegistration _$UserRegistrationFromJson(Map<String, dynamic> json) =>
         json['lockoutEnd'],
         const DateTimeConverter().fromJson,
       ),
+      json['isLockedOut'] as bool?,
     );
 
 Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
@@ -44,6 +45,7 @@ Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
       ),
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
+      'isLockedOut': instance.isLockedOut,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(
