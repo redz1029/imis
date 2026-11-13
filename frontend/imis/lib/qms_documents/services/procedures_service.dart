@@ -27,15 +27,32 @@ class ProceduresService {
     );
   }
 
-  Future<void> createOrUpdatePolicy(
+  void _flatten(String prefix, dynamic value, Map<String, dynamic> out) {
+    if (value == null) return;
+    if (value is Map) {
+      value.forEach((k, v) => _flatten('$prefix.$k', v, out));
+    } else if (value is List) {
+      for (int i = 0; i < value.length; i++) {
+        _flatten('$prefix[$i]', value[i], out);
+      }
+    } else {
+      out[prefix] = value;
+    }
+  }
+
+  Future<Procedures> createOrUpdatePolicy(
     Procedures p, {
     Uint8List? attachmentBytes,
     String? attachmentName,
   }) async {
-    final url = ApiEndpoint().policyAndProcedure;
+    final isUpdate = p.id != null && p.id != 0;
+    final baseUrl = ApiEndpoint().policyAndProcedure;
+    final url = isUpdate ? '$baseUrl/${p.id}' : baseUrl;
 
     final fields = <String, dynamic>{
-      if (p.id != null) 'id': p.id,
+      if (isUpdate) 'id': p.id,
+      if (p.rowVersion != null && p.rowVersion!.isNotEmpty)
+        'rowVersion': p.rowVersion,
       if (p.title != null) 'title': p.title,
       if (p.processOwner != null) 'processOwner': p.processOwner,
       if (p.regulatoryStandard != null)
@@ -51,6 +68,11 @@ class ProceduresService {
       'removeAttachment': p.removeAttachment ?? false,
     };
 
+    final sigs = p.papSignatories ?? const [];
+    for (int i = 0; i < sigs.length; i++) {
+      _flatten('papSignatories[$i]', sigs[i].toJson(), fields);
+    }
+
     final formData = FormData.fromMap(fields);
 
     if (attachmentBytes != null) {
@@ -65,21 +87,46 @@ class ProceduresService {
       );
     }
 
-    debugPrint('>>> POST $url fields=${fields.keys.toList()}');
     try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: formData,
-      );
+      final response =
+          isUpdate
+              ? await AuthenticatedRequest.put(dio, url, data: formData)
+              : await AuthenticatedRequest.post(dio, url, data: formData);
 
-      debugPrint('>>> RESPONSE ${response.statusCode}');
-      if (response.statusCode != 200 && response.statusCode != 201) {
+      if (response.statusCode != 200 &&
+          response.statusCode != 201 &&
+          response.statusCode != 204) {
         throw Exception('Failed to add/update policy.');
       }
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) return Procedures.fromJson(data);
+      return p;
     } on DioException catch (e) {
       throw Exception(
         'Save failed (${e.response?.statusCode}): ${e.response?.data ?? e.message}',
+      );
+    }
+  }
+
+  Future<void> submit(String userId, Procedures procedure) async {
+    final url = '${ApiEndpoint().policyAndProcedure}/submit';
+
+    try {
+      final response = await AuthenticatedRequest.put(
+        dio,
+        url,
+        queryParameters: {'userId': userId},
+        data: procedure.toJson(),
+      );
+
+      final code = response.statusCode ?? 0;
+      if (code < 200 || code >= 300) {
+        throw Exception('Failed to submit policy. (status $code)');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        'Submit failed (${e.response?.statusCode}): ${e.response?.data ?? e.message}',
       );
     }
   }
@@ -92,10 +139,8 @@ class ProceduresService {
         throw Exception('Failed to load procedure.');
       }
       return Procedures.fromJson(response.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw Exception(
-        'Load failed (${e.response?.statusCode}): ${e.response?.data ?? e.message}',
-      );
+    } on DioException {
+      throw Exception();
     }
   }
 
@@ -106,10 +151,8 @@ class ProceduresService {
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete procedure.');
       }
-    } on DioException catch (e) {
-      throw Exception(
-        'Delete failed (${e.response?.statusCode}): ${e.response?.data ?? e.message}',
-      );
+    } on DioException {
+      throw Exception();
     }
   }
 }
