@@ -148,6 +148,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         '',
         '',
         null,
+        true,
       ),
     );
   }
