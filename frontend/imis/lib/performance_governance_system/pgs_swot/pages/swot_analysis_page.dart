@@ -171,7 +171,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
 
   Future<void> _initialize() async {
     final user = await AuthUtil.fetchLoggedUser();
-    final offices = await _commonService.fetchOffices();
+    final offices = await _commonService.fetchAlloffices();
 
     if (!mounted) return;
 
