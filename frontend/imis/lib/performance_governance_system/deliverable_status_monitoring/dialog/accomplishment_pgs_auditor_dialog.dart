@@ -821,49 +821,6 @@ class AccomplishmentPgsAuditorDialogState extends State<_AuditorRowContent> {
     );
   }
 
-  void _showTooltip(BuildContext context, String message) {
-    _removeTooltip();
-
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
-    _overlayEntry = OverlayEntry(
-      builder:
-          (context) => Positioned(
-            left: offset.dx < 8 ? 8 : offset.dx,
-            top: offset.dy - 40,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  message,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-          ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-    Future.delayed(const Duration(seconds: 2), _removeTooltip);
-  }
-
   void _removeTooltip() {
     _overlayEntry?.remove();
     _overlayEntry = null;
@@ -1324,7 +1281,7 @@ class AccomplishmentPgsAuditorDialogState extends State<_AuditorRowContent> {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: row.remarksController,
       builder: (context, value, _) {
-        return Text(
+        return SelectableText(
           value.text.isEmpty ? "No remarks" : value.text,
           textAlign: align,
           style: const TextStyle(fontSize: 14),
