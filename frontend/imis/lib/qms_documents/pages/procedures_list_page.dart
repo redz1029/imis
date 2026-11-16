@@ -5,30 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/qms_documents/models/procedures.dart';
-import 'package:imis/qms_documents/services.dart/procedures_service.dart';
+import 'package:imis/qms_documents/services/procedures_service.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'procedures_page.dart';
-
-class ProcedureDoc {
-  final int id;
-  final Map<String, String> header;
-  final String html;
-
-  const ProcedureDoc({
-    required this.id,
-    required this.header,
-    required this.html,
-  });
-
-  String get title => header['title'] ?? '';
-  String get docCode => header['docCode'] ?? '';
-  String get section => header['section'] ?? '';
-  String get revision => header['revision'] ?? '';
-  String get effectivity => header['effectivity'] ?? '';
-  String get owner => header['owner'] ?? '';
-}
 
 class ProceduresListPage extends StatefulWidget {
   const ProceduresListPage({super.key});
@@ -43,7 +24,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
 
   late final ProceduresService _service = ProceduresService(Dio());
 
-  List<ProcedureDoc> _items = [];
+  List<Procedures> _items = [];
   int _totalItems = 0;
   bool _isLoading = false;
   int _currentPage = 1;
@@ -51,7 +32,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   Timer? _debounce;
 
   bool _editing = false;
-  ProcedureDoc? _editingDoc;
+  Procedures? _editingProc;
   int _editorSeed = 0;
 
   static const _months = [
@@ -89,19 +70,18 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     return '${_months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
-  ProcedureDoc _toDoc(Procedures p) => ProcedureDoc(
-    id: p.id ?? 0,
-    html: p.content ?? '',
-    header: {
-      'title': p.title ?? '',
-      'section': p.sectionId?.toString() ?? '',
-      'owner': p.processOwner ?? '',
-      'docCode': p.documentCode ?? '',
-      'revision': p.revision ?? '',
-      'reference': p.regulatoryStandard ?? '',
-      'effectivity': _fmtDate(p.effectiveDate),
-    },
-  );
+  // Header map na hinihingi ng ProceduresPage (initialHeader)
+  Map<String, String> _headerOf(Procedures p) => {
+    'title': p.title ?? '',
+    'section': p.officeName ?? '',
+    'owner': p.processOwner ?? '',
+    'docCode': p.documentCode ?? '',
+    'revision': p.revision ?? '',
+    'reference': p.regulatoryStandard ?? '',
+    'effectivity': _fmtDate(p.effectiveDate),
+  };
+
+  bool _isDraft(Procedures p) => p.isDraft ?? true;
 
   void _toast(String msg, {bool error = false}) {
     if (!mounted) return;
@@ -122,7 +102,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
       );
       if (!mounted) return;
       setState(() {
-        _items = result.items.map(_toDoc).toList();
+        _items = result.items.toList();
         _totalItems = result.totalCount;
       });
     } catch (e) {
@@ -143,20 +123,20 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
 
   // ───────────────────────── editor ─────────────────────────
 
-  void _openEditor({ProcedureDoc? doc}) {
+  void _openEditor({Procedures? proc}) {
     setState(() {
-      _editingDoc = doc;
+      _editingProc = proc;
       _editorSeed++;
       _editing = true;
     });
   }
 
-  /// Fetch the full record (incl. content) before editing.
-  Future<void> _openEditorById(int id) async {
+  Future<void> _openEditorById(int? id) async {
+    if (id == null) return;
     try {
       final p = await _service.getById(id);
       if (!mounted) return;
-      _openEditor(doc: _toDoc(p));
+      _openEditor(proc: p);
     } catch (e) {
       _toast('$e', error: true);
     }
@@ -168,7 +148,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     _load(); // refresh list after save/close
   }
 
-  void _confirmDelete(ProcedureDoc doc) {
+  void _confirmDelete(Procedures p) {
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -179,7 +159,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
             onDelete: () async {
               Navigator.pop(ctx);
               try {
-                // await _service.delete(doc.id);
+                // await _service.delete(p.id!);
                 _toast('Procedure deleted successfully');
                 // go back a page if we just deleted the last row on this page
                 if (_items.length == 1 && _currentPage > 1) _currentPage--;
@@ -197,13 +177,14 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   @override
   Widget build(BuildContext context) {
     if (_editing) {
+      final p = _editingProc;
       return ProceduresPage(
         key: ValueKey(_editorSeed),
         service: _service,
-        id: _editingDoc?.id,
-        sectionId: int.tryParse(_editingDoc?.section ?? ''),
-        initialHtml: _editingDoc?.html,
-        initialHeader: _editingDoc?.header,
+        id: p?.id,
+        sectionId: p?.sectionId,
+        initialHtml: p?.content,
+        initialHeader: p == null ? null : _headerOf(p),
         onClose: _closeEditor,
       );
     }
@@ -260,14 +241,14 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                                       color: Colors.grey.withValues(alpha: .2),
                                     ),
                                 itemBuilder: (context, index) {
-                                  final doc = rows[index];
+                                  final p = rows[index];
                                   final no =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
                                   return isMobile
-                                      ? _buildMobileRow(no, doc)
-                                      : _buildDesktopRow(no, doc);
+                                      ? _buildMobileRow(no, p)
+                                      : _buildDesktopRow(no, p);
                                 },
                               ),
                     ),
@@ -500,27 +481,50 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
       child: const Row(
         children: [
           Expanded(flex: 1, child: Text('#', style: style)),
-          Expanded(flex: 4, child: Text('Title', style: style)),
+          Expanded(flex: 3, child: Text('Title', style: style)),
           Expanded(flex: 2, child: Text('Doc. Code', style: style)),
           Expanded(flex: 2, child: Text('Section', style: style)),
           Expanded(flex: 2, child: Text('Effectivity Date', style: style)),
+          Expanded(flex: 2, child: Text('Status', style: style)),
           Expanded(flex: 2, child: Text('Actions', style: style)),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopRow(int no, ProcedureDoc doc) {
+  Widget _statusText(Procedures p, {double size = 12}) {
+    final draft = _isDraft(p);
+    return Text(
+      draft ? 'Draft' : 'Submitted',
+      style: TextStyle(
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+        color: draft ? Colors.orange.shade700 : Colors.green.shade700,
+      ),
+    );
+  }
+
+  Widget _buildDesktopRow(int no, Procedures p) {
     const cell = TextStyle(fontSize: 12);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(flex: 1, child: Text('$no', style: cell)),
-          Expanded(flex: 4, child: Text(doc.title, style: cell)),
-          Expanded(flex: 2, child: Text(doc.docCode, style: cell)),
-          Expanded(flex: 2, child: Text(doc.section, style: cell)),
-          Expanded(flex: 2, child: Text(doc.effectivity, style: cell)),
+          Expanded(flex: 3, child: Text(p.title ?? '', style: cell)),
+          Expanded(flex: 2, child: Text(p.documentCode ?? '', style: cell)),
+          Expanded(flex: 2, child: Text(p.officeName ?? '', style: cell)),
+          Expanded(
+            flex: 2,
+            child: Text(_fmtDate(p.effectiveDate), style: cell),
+          ),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _statusText(p),
+            ),
+          ),
           Expanded(
             flex: 2,
             child: Row(
@@ -529,7 +533,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                   message: 'Edit',
                   child: IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _openEditorById(doc.id),
+                    onPressed: () => _openEditorById(p.id),
                   ),
                 ),
                 Tooltip(
@@ -540,7 +544,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                       size: 16,
                       color: Colors.redAccent,
                     ),
-                    onPressed: () => _confirmDelete(doc),
+                    onPressed: () => _confirmDelete(p),
                   ),
                 ),
               ],
@@ -551,7 +555,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     );
   }
 
-  Widget _buildMobileRow(int no, ProcedureDoc doc) {
+  Widget _buildMobileRow(int no, Procedures p) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       margin: const EdgeInsets.only(bottom: 12),
@@ -572,8 +576,8 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                 color: Theme.of(context).cardColor,
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
-                  if (v == 'edit') _openEditorById(doc.id);
-                  if (v == 'delete') _confirmDelete(doc);
+                  if (v == 'edit') _openEditorById(p.id);
+                  if (v == 'delete') _confirmDelete(p);
                 },
                 itemBuilder:
                     (_) => const [
@@ -606,14 +610,24 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text('Title: ${doc.title}', style: const TextStyle(fontSize: 12)),
+          Text('Title: ${p.title ?? ''}', style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 4),
           Text(
-            'Doc. Code: ${doc.docCode}',
+            'Doc. Code: ${p.documentCode ?? ''}',
             style: const TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 4),
-          Text('Section: ${doc.section}', style: const TextStyle(fontSize: 12)),
+          Text(
+            'Section: ${p.officeName ?? ''}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text('Status: ', style: TextStyle(fontSize: 12)),
+              _statusText(p),
+            ],
+          ),
         ],
       ),
     );
