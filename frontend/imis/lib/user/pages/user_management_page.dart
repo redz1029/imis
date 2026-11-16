@@ -102,9 +102,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------
-  // Search: cache ng LAHAT ng users + search gamit ang getUser endpoint
-  // ---------------------------------------------------------------------
   List<PendingApprovalUser> _allActive = [];
   List<PendingApprovalUser> _allPending = [];
   bool _allActiveLoaded = false;
@@ -119,7 +116,6 @@ class _UserManagementPageState extends State<UserManagementPage>
         fromJson: (json) => UserRegistration.fromJson(json),
       );
 
-  // Lahat ng salita sa query dapat nasa name/username/position
   bool _matches(PendingApprovalUser u, String q) {
     final hay = '${u.fullName} ${u.userName} ${u.position}'.toLowerCase();
     return q
@@ -129,8 +125,6 @@ class _UserManagementPageState extends State<UserManagementPage>
         .every(hay.contains);
   }
 
-  // Parehong logic sa lumang UserProfilePage: hanapin sa lahat ng users
-  // (first/middle/last name + username), ibalik ang ids/usernames
   Future<Set<String>> _searchKeys(String query) async {
     try {
       final results = await _userSearchUtil.filter(query, (user, search) {
@@ -160,7 +154,6 @@ class _UserManagementPageState extends State<UserManagementPage>
       keys.contains('id:${u.id}') ||
       keys.contains('un:${u.userName.toLowerCase()}');
 
-  // Kunin lahat ng page (100 per request) hanggang kumpleto
   Future<List<PendingApprovalUser>> _loadAll(
     Future<dynamic> Function(int page, int size) fetch,
   ) async {
@@ -634,10 +627,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Edit / Create / Change Password  (merged in from UserProfilePage)
-  // ---------------------------------------------------------------------
-
   Future<bool> isUsernameExists(String username, [String? userId]) async {
     try {
       final userList = await _userProfileService.getUsers(
@@ -656,9 +645,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     }
   }
 
-  /// The lockout list (PendingApprovalUser) doesn't carry every field the
-  /// edit/change-password forms need (email, names, prefix, etc.), so we
-  /// look the full record up by username before opening those dialogs.
   Future<UserRegistration?> _fetchFullProfileByUsername(String userName) async {
     try {
       final result = await _userProfileService.getUsers(
@@ -1715,10 +1701,6 @@ class _UserManagementPageState extends State<UserManagementPage>
       ),
     );
   }
-
-  // ---------------------------------------------------------------------
-  // Avatar / status helpers
-  // ---------------------------------------------------------------------
 
   Widget _avatar(PendingApprovalUser user, {double size = 40}) {
     final initials =
