@@ -1,12 +1,24 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui_web' as ui_web;
+import 'package:flutter/cupertino.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/performance_governance_system/pgs_isat/models/isat_employee_office.dart';
+import 'package:imis/performance_governance_system/pgs_isat/services/isat_services.dart';
+import 'package:imis/qms_documents/models/pap_history_log.dart';
+import 'package:imis/qms_documents/models/pap_signatory.dart';
 import 'package:imis/qms_documents/models/procedures.dart';
-import 'package:imis/qms_documents/services.dart/procedures_service.dart';
+import 'package:imis/qms_documents/services/pap_history_log_service.dart';
+import 'package:imis/qms_documents/services/procedures_service.dart';
 import 'package:imis/qms_documents/template/qms_template.dart';
 import 'package:dio/dio.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +37,10 @@ class ProceduresPage extends StatefulWidget {
 
   final int? id;
 
+  final List<PapSignatory>? initialSignatories;
+
+  final String? initialRowVersion;
+
   final Future<void> Function(String html)? onSave;
   final Future<void> Function(Map<String, String> header, String html)?
   onSaveDocument;
@@ -37,6 +53,8 @@ class ProceduresPage extends StatefulWidget {
     this.initialHeader,
     this.sectionId,
     this.id,
+    this.initialSignatories,
+    this.initialRowVersion,
     this.onSave,
     this.onSaveDocument,
     this.onClose,
@@ -54,6 +72,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   String? _previewHtml;
   bool _saving = false;
   int _step = 0;
+  final _papHistoryLog = PapHistoryLogService(Dio());
+  final _isatService = IsatServices(Dio());
 
   int _tab = 0;
 
@@ -75,6 +95,35 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   String? _latestHtml;
   String? _userId;
+
+  int? _id;
+  String _rowVersion = '';
+  List<PapSignatory> _signatories = [];
+
+  int? _sectionId;
+  List<IsatEmployeeOffice> _offices = [];
+  bool _loadingOffices = false;
+  bool _officesLoaded = false;
+
+  PapHistoryLog? _history;
+  bool _historyLoading = false;
+  bool _historyLoaded = false;
+  String? _historyError;
+  bool _isDraft = true;
+  bool _statusChecked = false;
+  List<_LogRow> _logRows = [];
+
+  bool _canConfirm = false;
+  bool _canDraft = false;
+  bool _confirmed = false;
+
+  bool _ready = false;
+
+  bool get _confirmOnly => _canConfirm && !_canDraft;
+
+  List<int> get _visibleSteps =>
+      _confirmOnly ? const [2] : List.generate(_steps.length, (i) => i);
+
   static const _headerKeys = [
     'title',
     'section',
@@ -124,7 +173,14 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   @override
   void initState() {
     super.initState();
+    _startFrameGuard();
     _latestHtml = widget.initialHtml;
+    _id = widget.id;
+    _rowVersion = widget.initialRowVersion ?? '';
+    _sectionId = widget.sectionId ?? int.tryParse(_hdr['section']!.text.trim());
+    _signatories = List<PapSignatory>.from(
+      widget.initialSignatories ?? const [],
+    );
     _effectivityDate = _parseEffectivity(_hdr['effectivity']!.text);
     _initialize();
   }
@@ -134,6 +190,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     for (final c in _hdr.values) {
       c.dispose();
     }
+    for (final r in _logRows) {
+      r.dispose();
+    }
+    _frameGuard?.cancel();
     if (_previewUrl != null) html.Url.revokeObjectUrl(_previewUrl!);
     super.dispose();
   }
@@ -169,6 +229,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
+  bool _hasPerm(String p) => PermissionService().hasPermission(p);
+
   Future<void> _initialize() async {
     final user = await AuthUtil.fetchLoggedUser();
 
@@ -180,13 +242,93 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       user?.lastName,
     ].where((e) => e != null && e.trim().isNotEmpty).join(' ');
 
+    final canConfirm = _hasPerm(AppPermissions.confirmPolicyAndProcedure);
+    final canDraft = _hasPerm(AppPermissions.draftPolicyAndProcedure);
+    final confirmOnly = canConfirm && !canDraft;
+
     setState(() {
       _userId = user?.id;
+      _canConfirm = canConfirm;
+      _canDraft = canDraft;
+      if (confirmOnly) _step = 2;
 
-      // Huwag i-overwrite kung may laman na (edit mode)
       if (_hdr['owner']!.text.trim().isEmpty) {
         _hdr['owner']!.text = fullName;
       }
+      _ready = true;
+    });
+
+    await _hydrateFromServer();
+    await _loadOffices();
+
+    if (confirmOnly && mounted) {
+      await _loadPreview();
+    }
+  }
+
+  Future<void> _hydrateFromServer() async {
+    if (_id == null) return;
+    try {
+      final p = await _service.getById(_id!);
+      if (!mounted) return;
+      setState(() {
+        _sectionId = p.sectionId ?? _sectionId;
+        final name = (p.officeName ?? '').trim();
+        if (name.isNotEmpty) _hdr['section']!.text = name;
+        if ((p.rowVersion ?? '').isNotEmpty) _rowVersion = p.rowVersion!;
+        if (_signatories.isEmpty && p.papSignatories != null) {
+          _signatories = List<PapSignatory>.from(p.papSignatories!);
+        }
+      });
+    } catch (_) {
+      // ignore: hydrate is best-effort
+    }
+  }
+
+  Future<void> _loadOffices() async {
+    final uid = _userId;
+    if (uid == null || uid.isEmpty) {
+      if (mounted) setState(() => _officesLoaded = true);
+      return;
+    }
+    setState(() => _loadingOffices = true);
+    try {
+      final offices = await _isatService.fetchEmployeeOffices(userId: uid);
+      if (!mounted) return;
+
+      final byId = _sectionId;
+      final byName = _hdr['section']!.text.trim();
+      final matches = offices.where(
+        (o) =>
+            (byId != null && o.id == byId) ||
+            (byName.isNotEmpty && o.name == byName),
+      );
+      final match = matches.isEmpty ? null : matches.first;
+
+      setState(() {
+        _offices = offices;
+        if (match != null) {
+          _sectionId = match.id;
+          _hdr['section']!.text = match.name;
+        }
+      });
+    } catch (e) {
+      debugPrint('Load offices failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingOffices = false;
+          _officesLoaded = true;
+        });
+      }
+    }
+  }
+
+  void _onSectionSelected(int id) {
+    final matches = _offices.where((e) => e.id == id);
+    setState(() {
+      _sectionId = id;
+      if (matches.isNotEmpty) _hdr['section']!.text = matches.first.name;
     });
   }
 
@@ -198,21 +340,35 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   late final ProceduresService _service =
       widget.service ?? ProceduresService(Dio());
 
-  Procedures _buildProcedure(String htmlText) {
+  Procedures _buildProcedure(String htmlText, {required bool isDraft}) {
     return Procedures(
-      id: widget.id,
+      id: _id,
+      rowVersion: _rowVersion,
       title: _hdr['title']!.text.trim(),
       processOwner: _hdr['owner']!.text.trim(),
       regulatoryStandard: _hdr['reference']!.text.trim(),
       effectiveDate: _effectivityDate,
-      sectionId: widget.sectionId ?? int.tryParse(_hdr['section']!.text.trim()),
+      sectionId: _sectionId,
       documentCode: _hdr['docCode']!.text.trim(),
       revision: _hdr['revision']!.text.trim(),
       content: htmlText,
       isMasterCopy: true,
       isControlledCopy: true,
       removeAttachment: false,
+      papSignatories: _signatories,
+      isDeleted: false,
+      isDraft: isDraft,
+      forSignature: false,
     );
+  }
+
+  void _applySaved(Procedures saved) {
+    _id = saved.id ?? _id;
+
+    if (saved.rowVersion != null && saved.rowVersion!.isNotEmpty) {
+      _rowVersion = saved.rowVersion!;
+    }
+    if (saved.papSignatories != null) _signatories = saved.papSignatories!;
   }
 
   Future<void> _save({bool close = false}) async {
@@ -225,29 +381,215 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       return;
     }
     setState(() => _saving = true);
+    bool saved = false;
     try {
       final htmlText = await _currentHtml();
 
-      debugPrint('>>> SAVING, sectionId=${widget.sectionId}');
-      await _service.createOrUpdatePolicy(_buildProcedure(htmlText));
-      debugPrint('>>> SAVE DONE');
+      final result = await _service.createOrUpdatePolicy(
+        _buildProcedure(htmlText, isDraft: true),
+      );
+      _applySaved(result);
+      saved = true;
 
-      await widget.onSave?.call(htmlText);
-      await widget.onSaveDocument?.call({
-        for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
-      }, htmlText);
+      try {
+        await widget.onSave?.call(htmlText);
+        await widget.onSaveDocument?.call({
+          for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
+        }, htmlText);
+      } catch (e, st) {
+        debugPrint('Post-save callback error: $e\n$st');
+      }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Saved successfully')));
-      if (close) _close();
-    } catch (e) {
-      debugPrint('Save error: $e');
+      MotionToast.success(
+        title: const Text('Success'),
+        description: const Text('Saved successfully'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      if (close) {
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+        _close();
+      }
+    } catch (e, st) {
+      debugPrint('Save error: $e\n$st');
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+      if (saved) {
+        MotionToast.warning(
+          title: const Text('Saved'),
+          description: Text(
+            'Saved, but a follow-up step failed: $e',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          toastAlignment: Alignment.center,
+        ).show(context);
+      } else {
+        MotionToast.error(
+          title: const Text('Failed to Save'),
+          description: Text('$e', maxLines: 3, overflow: TextOverflow.ellipsis),
+          toastAlignment: Alignment.center,
+        ).show(context);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+
+    if (_userId == null) {
+      MotionToast.error(
+        title: const Text('User Not Found'),
+        description: const Text('Please log in again.'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    if (!_headerValid()) {
+      setState(() {
+        _tab = 0;
+        _step = 0;
+      });
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Confirm Submit'),
+            content: const Text(
+              'Are you sure you want to submit this document? ',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _saving = true);
+    bool submitted = false;
+    try {
+      final htmlText = await _currentHtml();
+
+      await _service.submit(
+        _userId!,
+        _buildProcedure(htmlText, isDraft: false),
+      );
+      submitted = true;
+
+      try {
+        await widget.onSave?.call(htmlText);
+        await widget.onSaveDocument?.call({
+          for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
+        }, htmlText);
+      } catch (e, st) {
+        debugPrint('Post-submit callback error: $e\n$st');
+      }
+
+      if (!mounted) return;
+      MotionToast.success(
+        title: const Text('Success'),
+        description: const Text('Submitted successfully'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+      _close();
+    } catch (e, st) {
+      debugPrint('Submit error: $e\n$st');
+      if (!mounted) return;
+      if (submitted) {
+        MotionToast.warning(
+          title: const Text('Submitted'),
+          description: Text(
+            'Submitted, but a follow-up step failed: $e',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          toastAlignment: Alignment.center,
+        ).show(context);
+      } else {
+        MotionToast.error(
+          title: const Text('Failed to Submit'),
+          description: Text('$e', maxLines: 3, overflow: TextOverflow.ellipsis),
+          toastAlignment: Alignment.center,
+        ).show(context);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _confirm() async {
+    if (_saving || _confirmed || _id == null || _userId == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Confirm Document'),
+            content: const Text(
+              'Are you sure you want to confirm this document?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+    );
+    if (ok != true) return;
+
+    setState(() => _saving = true);
+    try {
+      final htmlText = await _currentHtml();
+      await _service.submit(
+        _userId!,
+        _buildProcedure(htmlText, isDraft: false),
+      );
+
+      if (!mounted) return;
+      setState(() => _confirmed = true);
+      MotionToast.success(
+        title: const Text('Success'),
+        description: const Text('Confirmed successfully'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+    } catch (e, st) {
+      debugPrint('Confirm error: $e\n$st');
+      if (!mounted) return;
+      MotionToast.error(
+        title: const Text('Failed to Confirm'),
+        description: Text('$e', maxLines: 3, overflow: TextOverflow.ellipsis),
+        toastAlignment: Alignment.center,
+      ).show(context);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -319,11 +661,14 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       final viewType = 'procedure-preview-${_previewSeq++}';
 
       ui_web.platformViewRegistry.registerViewFactory(viewType, (int _) {
-        return html.IFrameElement()
-          ..srcdoc = inlineHtml
-          ..style.border = 'none'
-          ..style.width = '100%'
-          ..style.height = '100%';
+        final frame =
+            html.IFrameElement()
+              ..srcdoc = inlineHtml
+              ..style.border = 'none'
+              ..style.width = '100%'
+              ..style.height = '100%';
+        _previewFrame = frame;
+        return frame;
       });
 
       if (!mounted) return;
@@ -368,6 +713,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   bool _headerValid() => _formKey.currentState?.validate() ?? true;
 
   Future<void> _goTo(int i) async {
+    if (_confirmOnly) return;
     if (i == _step) return;
     if (i > _step && !_headerValid()) return;
     if (_step == 1) await _captureEditor();
@@ -392,8 +738,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       if (_step == 2) _loadPreview();
     }
   }
-
-  // ───────────────────────── build ─────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -425,26 +769,37 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
           ),
         ),
       ),
-      bottomNavigationBar: _tab == 0 ? _buildFooter(isLast) : null,
+      bottomNavigationBar:
+          !_ready
+              ? null
+              : _tab == 0
+              ? (_confirmOnly ? _buildConfirmFooter() : _buildFooter(isLast))
+              : null,
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildTopTabs(),
-            const SizedBox(height: 12),
-            Expanded(
-              child: IndexedStack(
-                index: _tab,
-                children: [
-                  _buildPolicyBody(isSmall),
-                  for (int i = 1; i < _tabs.length; i++)
-                    _buildPlaceholderTab(_tabs[i]),
-                ],
-              ),
-            ),
-          ],
-        ),
+        child:
+            !_ready
+                ? const Center(
+                  child: CircularProgressIndicator(color: primaryColor),
+                )
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTopTabs(),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _tab,
+                        children: [
+                          _buildPolicyBody(isSmall),
+                          _buildHistoryTab(),
+                          for (int i = 2; i < _tabs.length; i++)
+                            _buildPlaceholderTab(_tabs[i]),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
       ),
     );
   }
@@ -454,11 +809,84 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     if (_tab == 0 && _step == 1) await _captureEditor();
     if (!mounted) return;
     setState(() => _tab = i);
+    if (i == 1) _loadHistory();
+  }
+
+  void _disposeLogRows() {
+    for (final r in _logRows) {
+      r.dispose();
+    }
+    _logRows = [];
+  }
+
+  Future<void> _loadHistory() async {
+    if (_id == null) {
+      setState(() {
+        _history = null;
+        _historyError = null;
+      });
+      return;
+    }
+    if (_historyLoaded) return;
+
+    setState(() {
+      _historyLoading = true;
+      _historyError = null;
+    });
+    try {
+      if (!_statusChecked) {
+        final p = await _service.getById(_id!);
+        _isDraft = p.isDraft ?? true;
+        _statusChecked = true;
+      }
+
+      // Draft pa lang: locked ang History Log, wag mag-load
+      if (_isDraft) return;
+
+      final h = await _papHistoryLog.getHistoryLog(_id!);
+      if (!mounted) return;
+      _disposeLogRows();
+      final rows = [
+        for (final l in h.policyAndProcedureLogList) _LogRow.fromModel(l),
+      ];
+      if (rows.isEmpty) rows.add(_LogRow());
+      setState(() {
+        _history = h;
+        _logRows = rows;
+        _historyLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('History load failed: $e');
+      if (!mounted) return;
+      setState(() => _historyError = 'Failed to load history log');
+    } finally {
+      if (mounted) setState(() => _historyLoading = false);
+    }
+  }
+
+  void _addLogRow() => setState(() => _logRows.add(_LogRow()));
+
+  void _removeLogRow(int i) {
+    setState(() {
+      _logRows[i].dispose();
+      _logRows.removeAt(i);
+    });
+  }
+
+  Future<void> _pickLogDate(_LogRow r) async {
+    final d = await showDatePicker(
+      context: context,
+      initialDate: r.date ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (d == null) return;
+    setState(() => r.date = d);
   }
 
   Widget _buildTopTabs() {
-    const d = 14.0; // lalim ng arrow point
-    const gap = 4.0; // espasyo sa pagitan ng chevrons
+    const d = 14.0;
+    const gap = 4.0;
     const h = 44.0;
     const minW = 190.0;
 
@@ -534,10 +962,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // ───────────────────────── tab bodies ─────────────────────────
-
-  /// Tab 1: Policy and Procedures (stepper + content)
   Widget _buildPolicyBody(bool isSmall) {
+    if (_confirmOnly) return _buildContent();
     return isSmall
         ? Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -557,7 +983,284 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
         );
   }
 
-  /// Tabs 2-5: placeholder muna (wala pang laman)
+  InputDecoration _logDecoration({String? hint, Widget? suffix}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+      isDense: true,
+      suffixIcon: suffix,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      border: _outline(Colors.grey.shade300),
+      enabledBorder: _outline(Colors.grey.shade300),
+      focusedBorder: _outline(primaryColor),
+    );
+  }
+
+  Widget _logField(
+    TextEditingController c, {
+    String? hint,
+    int? maxLines = 1,
+    int minLines = 1,
+  }) {
+    return TextField(
+      controller: c,
+      minLines: minLines,
+      maxLines: maxLines,
+      keyboardType: TextInputType.multiline,
+      style: GoogleFonts.plusJakartaSans(fontSize: 12),
+      decoration: _logDecoration(hint: hint),
+    );
+  }
+
+  Widget _logDateField(_LogRow r) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => _pickLogDate(r),
+      child: InputDecorator(
+        decoration: _logDecoration(
+          suffix: const Icon(Icons.calendar_today_outlined, size: 16),
+        ),
+        child: Text(
+          r.date == null
+              ? 'Select date'
+              : DateFormat('MMM d, y').format(r.date!),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: r.date == null ? Colors.grey.shade500 : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _logHeaderCell(String t) => Text(
+    t,
+    style: GoogleFonts.plusJakartaSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: Colors.black54,
+    ),
+  );
+
+  Widget _buildHistoryLocked() {
+    return _card(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline, size: 40, color: Colors.grey.shade400),
+              const SizedBox(height: 12),
+              Text(
+                'History Log is locked',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "You can't use this form yet. Submit the document first to unlock the History Log.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    if (_historyLoading) {
+      return _card(child: const Center(child: CircularProgressIndicator()));
+    }
+    if (_id == null) return _buildHistoryLocked();
+    if (_historyError != null) {
+      return _card(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_historyError!, style: const TextStyle(fontSize: 12)),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _loadHistory,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (!_statusChecked) {
+      return _card(child: const Center(child: CircularProgressIndicator()));
+    }
+    if (_isDraft) return _buildHistoryLocked();
+
+    final h = _history;
+    final title =
+        (h?.titleName.isNotEmpty ?? false)
+            ? h!.titleName
+            : _hdr['title']!.text.trim();
+    final docDate = h?.effectiveDate ?? _effectivityDate;
+    final dateText =
+        docDate == null ? '—' : DateFormat('MMMM d, y').format(docDate);
+
+    Widget info(String label, String value) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(
+          value.isEmpty ? '—' : value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+
+    const actionW = 40.0;
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Revision History Log',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _addLogRow,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add Row', style: TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  side: BorderSide(color: primaryColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _cols([info('Document Title', title), info('Date', dateText)]),
+          _divider(),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, c) {
+                final w = math.max(c.maxWidth, 860.0);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: _logHeaderCell('Document Code'),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(child: _logHeaderCell('Page No.')),
+                            const SizedBox(width: 8),
+                            Expanded(child: _logHeaderCell('Revision No.')),
+                            const SizedBox(width: 8),
+                            Expanded(flex: 2, child: _logHeaderCell('Date')),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 4,
+                              child: _logHeaderCell(
+                                'Reasons / Details of Revision',
+                              ),
+                            ),
+                            const SizedBox(width: actionW),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: _logRows.length,
+                            separatorBuilder:
+                                (_, __) => const SizedBox(height: 10),
+                            itemBuilder: (_, i) {
+                              final r = _logRows[i];
+                              return Row(
+                                key: ObjectKey(r),
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: _logField(
+                                      r.code,
+                                      hint: 'e.g. NS-MHU-PP-02',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _logField(r.page, hint: 'e.g. 1-8'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _logField(
+                                      r.revision,
+                                      hint: 'e.g. 1',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(flex: 2, child: _logDateField(r)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 4,
+                                    child: _logField(
+                                      r.reasons,
+                                      hint: 'Reason / details of revision',
+                                      maxLines: null,
+                                      minLines: 1,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: actionW,
+                                    child: IconButton(
+                                      tooltip: 'Remove row',
+                                      icon: Icon(
+                                        CupertinoIcons.delete_simple,
+                                        size: 20,
+                                        color: Colors.red.shade400,
+                                      ),
+                                      onPressed: () => _removeLogRow(i),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPlaceholderTab(String title) {
     return _card(
       child: Center(
@@ -588,6 +1291,56 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
+  Widget _buildConfirmFooter() {
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton.icon(
+              onPressed: (_saving || _confirmed) ? null : _confirm,
+              icon:
+                  _saving
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : Icon(
+                        _confirmed ? Icons.check : Icons.verified_outlined,
+                        size: 18,
+                      ),
+              label: Text(_confirmed ? 'Confirmed' : 'Confirm'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: primaryColor.withAlpha(140),
+                disabledForegroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFooter(bool isLast) {
     return SafeArea(
       child: Container(
@@ -604,7 +1357,30 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
           runSpacing: 8,
           children: [
             if (_step > 0) _outlineBtn('Back', _back),
-            _outlineBtn('Save as Draft', _saving ? null : _save),
+            PermissionWidget(
+              permission: AppPermissions.draftPolicyAndProcedure,
+              child: _outlineBtn('Save as Draft', _saving ? null : _save),
+            ),
+            if (isLast && _id != null)
+              PermissionWidget(
+                permission: AppPermissions.submitPolicyAndProcedure,
+                child: OutlinedButton.icon(
+                  onPressed: _saving ? null : _submit,
+                  icon: const Icon(Icons.send_rounded, size: 16),
+                  label: const Text('Submit', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primaryColor,
+                    side: BorderSide(color: primaryColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
             ElevatedButton(
               onPressed: _saving ? null : _next,
               style: ElevatedButton.styleFrom(
@@ -649,10 +1425,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // ───────────────────────── stepper ─────────────────────────
-
   Widget _stepIcon(int i, {double size = 34}) {
-    final done = i < _step;
+    final done = i < _step || _confirmed;
     final active = i == _step;
     return Container(
       width: size,
@@ -673,6 +1447,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Widget _buildStepperVertical() {
+    final visible = _visibleSteps;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -681,7 +1456,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       ),
       child: Column(
         children: [
-          for (int i = 0; i < _steps.length; i++) ...[
+          for (final i in visible) ...[
             InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () => _goTo(i),
@@ -747,7 +1522,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                 ),
               ),
             ),
-            if (i != _steps.length - 1)
+            if (i != visible.last)
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
@@ -764,6 +1539,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Widget _buildStepperHorizontal() {
+    final visible = _visibleSteps;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -772,7 +1548,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       ),
       child: Row(
         children: [
-          for (int i = 0; i < _steps.length; i++) ...[
+          for (final i in visible) ...[
             InkWell(
               onTap: () => _goTo(i),
               child: Row(
@@ -791,7 +1567,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                 ],
               ),
             ),
-            if (i != _steps.length - 1)
+            if (i != visible.last)
               Expanded(
                 child: Container(
                   height: 1,
@@ -805,7 +1581,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // ───────────────────────── content ─────────────────────────
   Widget _buildContent() {
     return IndexedStack(
       index: _step,
@@ -816,6 +1591,43 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
         _buildReviewStep(),
       ],
     );
+  }
+
+  html.IFrameElement? _previewFrame;
+  Timer? _frameGuard;
+
+  void _setFramePointer(bool blocked) {
+    final frame = _previewFrame;
+    if (frame == null) return;
+    final v = blocked ? 'none' : 'auto';
+    frame.style.pointerEvents = v;
+
+    html.Element? p = frame.parent;
+    for (var i = 0; i < 4 && p != null; i++) {
+      if ((p.localName).startsWith('flt-platform-view')) {
+        p.style.pointerEvents = v;
+      }
+      p = p.parent;
+    }
+  }
+
+  void _startFrameGuard() {
+    _frameGuard ??= Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!mounted) return;
+      bool popupOnTop(NavigatorState nav) {
+        Route<dynamic>? top;
+        nav.popUntil((r) {
+          top = r;
+          return true;
+        });
+        return top is PopupRoute;
+      }
+
+      final blocked =
+          popupOnTop(Navigator.of(context, rootNavigator: true)) ||
+          popupOnTop(Navigator.of(context));
+      _setFramePointer(blocked);
+    });
   }
 
   Widget _buildPreviewStep() {
@@ -974,6 +1786,96 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
+  Widget _buildSectionDropdown() {
+    Widget body;
+
+    if (_loadingOffices) {
+      body = const Padding(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        child: LinearProgressIndicator(minHeight: 2, color: primaryColor),
+      );
+    } else if (_offices.isEmpty && _sectionId == null) {
+      body =
+          _officesLoaded
+              ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'No section is assigned to you. Please contact the admin.',
+                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                ),
+              )
+              : const SizedBox(height: 40);
+    } else {
+      final items = <DropdownMenuItem<int>>[
+        for (final o in _offices)
+          DropdownMenuItem<int>(
+            value: o.id,
+            child: Text(o.name, overflow: TextOverflow.ellipsis),
+          ),
+      ];
+
+      final hasCurrent =
+          _sectionId != null && _offices.any((o) => o.id == _sectionId);
+      if (_sectionId != null && !hasCurrent) {
+        final name = _hdr['section']!.text.trim();
+        items.insert(
+          0,
+          DropdownMenuItem<int>(
+            value: _sectionId,
+            child: Text(
+              name.isEmpty ? 'Section #$_sectionId' : name,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        );
+      }
+
+      body = DropdownButtonFormField<int>(
+        key: ValueKey(_sectionId),
+        value: _sectionId,
+        isExpanded: true,
+        dropdownColor: Colors.white,
+        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.black87),
+        hint: Text(
+          'Select section…',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+        ),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          border: _outline(Colors.grey.shade300),
+          enabledBorder: _outline(Colors.grey.shade300),
+          focusedBorder: _outline(primaryColor),
+          errorBorder: _outline(Colors.red.shade300),
+          focusedErrorBorder: _outline(Colors.red.shade400),
+        ),
+        validator: (v) => v == null ? 'Section is required' : null,
+        items: items,
+        onChanged: (id) {
+          if (id != null) _onSectionSelected(id);
+        },
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Section *',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        body,
+      ],
+    );
+  }
+
   OutlineInputBorder _outline(Color c) => OutlineInputBorder(
     borderRadius: BorderRadius.circular(8),
     borderSide: BorderSide(color: c),
@@ -1020,7 +1922,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               ),
               const SizedBox(height: 14),
               _cols([
-                _field('section', 'Section'),
+                _buildSectionDropdown(),
                 _field('owner', 'Process Owner', readOnly: true),
               ]),
               const SizedBox(height: 14),
@@ -1042,7 +1944,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               ),
               const SizedBox(height: 14),
               _cols([
-                _field('pages', 'Pages', hint: 'e.g. 1 of 6'),
+                _field('pages', 'Pages', hint: '', readOnly: true),
                 _field(
                   'effectivity',
                   'Effectivity Date',
@@ -1144,7 +2046,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                     'Add space after paragraph',
                     () => _controller.evaluateJavascriptWeb('spaceAdd'),
                   ),
-                  // ── Image tools (i-click muna ang image sa editor) ──
                   PopupMenuButton<String>(
                     tooltip: 'Image size (click image first)',
                     icon: const Icon(Icons.photo_size_select_large, size: 20),
@@ -1238,6 +2139,31 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
         ),
       ),
     );
+  }
+}
+
+class _LogRow {
+  final PolicyandProceduresLogList? source;
+  final TextEditingController code;
+  final TextEditingController page;
+  final TextEditingController revision;
+  final TextEditingController reasons;
+  DateTime? date;
+
+  _LogRow({this.source, this.date})
+    : code = TextEditingController(text: source?.documentCode ?? ''),
+      page = TextEditingController(text: source?.pageNo ?? ''),
+      revision = TextEditingController(text: source?.revision ?? ''),
+      reasons = TextEditingController(text: source?.reasons ?? '');
+
+  factory _LogRow.fromModel(PolicyandProceduresLogList m) =>
+      _LogRow(source: m, date: m.date);
+
+  void dispose() {
+    code.dispose();
+    page.dispose();
+    revision.dispose();
+    reasons.dispose();
   }
 }
 
