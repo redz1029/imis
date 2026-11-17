@@ -63,14 +63,11 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     super.dispose();
   }
 
-  // ───────────────────────── data ─────────────────────────
-
   String _fmtDate(DateTime? d) {
     if (d == null || d.year < 2000) return '';
     return '${_months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
-  // Header map na hinihingi ng ProceduresPage (initialHeader)
   Map<String, String> _headerOf(Procedures p) => {
     'title': p.title ?? '',
     'section': p.officeName ?? '',
@@ -121,8 +118,6 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     _debounce = Timer(const Duration(milliseconds: 400), _load);
   }
 
-  // ───────────────────────── editor ─────────────────────────
-
   void _openEditor({Procedures? proc}) {
     setState(() {
       _editingProc = proc;
@@ -145,7 +140,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   void _closeEditor() {
     if (!mounted) return;
     setState(() => _editing = false);
-    _load(); // refresh list after save/close
+    _load();
   }
 
   void _confirmDelete(Procedures p) {
@@ -159,9 +154,8 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
             onDelete: () async {
               Navigator.pop(ctx);
               try {
-                // await _service.delete(p.id!);
+                await _service.delete(p.id!);
                 _toast('Procedure deleted successfully');
-                // go back a page if we just deleted the last row on this page
                 if (_items.length == 1 && _currentPage > 1) _currentPage--;
                 await _load();
               } catch (e) {
@@ -171,8 +165,6 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
           ),
     );
   }
-
-  // ───────────────────────── build ─────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -483,6 +475,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
           Expanded(flex: 1, child: Text('#', style: style)),
           Expanded(flex: 3, child: Text('Title', style: style)),
           Expanded(flex: 2, child: Text('Doc. Code', style: style)),
+          Expanded(flex: 2, child: Text('Revision', style: style)),
           Expanded(flex: 2, child: Text('Section', style: style)),
           Expanded(flex: 2, child: Text('Effectivity Date', style: style)),
           Expanded(flex: 2, child: Text('Status', style: style)),
@@ -513,6 +506,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
           Expanded(flex: 1, child: Text('$no', style: cell)),
           Expanded(flex: 3, child: Text(p.title ?? '', style: cell)),
           Expanded(flex: 2, child: Text(p.documentCode ?? '', style: cell)),
+          Expanded(flex: 2, child: Text(p.revision ?? '', style: cell)),
           Expanded(flex: 2, child: Text(p.officeName ?? '', style: cell)),
           Expanded(
             flex: 2,

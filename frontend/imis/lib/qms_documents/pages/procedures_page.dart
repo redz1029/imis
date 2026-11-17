@@ -80,7 +80,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   static const _tabs = [
     'Policy and Procedures',
     'History Log',
-    'DCCRF',
+    'DCRRF',
     'Document Master List',
     'Overall Document Masterlist',
     'Document Distribution List',
@@ -112,6 +112,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   bool _isDraft = true;
   bool _statusChecked = false;
   List<_LogRow> _logRows = [];
+  final List<_LogRow> _removedRows = [];
+  bool _savingLog = false;
+  bool _logDirty = false;
 
   bool _canConfirm = false;
   bool _canDraft = false;
@@ -123,7 +126,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   List<int> get _visibleSteps =>
       _confirmOnly ? const [2] : List.generate(_steps.length, (i) => i);
-
+  // Usable print area ng isang page (96 dpi). A4 na may 1in margins.
+  // Baguhin kung iba ang @page size/margins ng qms_template.
+  static const double _pageContentWidthPx = 602;
+  static const double _pageContentHeightPx = 931;
   static const _headerKeys = [
     'title',
     'section',
@@ -193,6 +199,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     for (final r in _logRows) {
       r.dispose();
     }
+    for (final r in _removedRows) {
+      r.dispose();
+    }
     _frameGuard?.cancel();
     if (_previewUrl != null) html.Url.revokeObjectUrl(_previewUrl!);
     super.dispose();
@@ -213,6 +222,12 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     } else {
       Navigator.maybePop(context);
     }
+  }
+
+  Future<void> _requestClose() async {
+    if (!await _confirmLeaveHistory()) return;
+    if (!mounted) return;
+    _close();
   }
 
   void _syncListMarkers() {
@@ -260,6 +275,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
     await _hydrateFromServer();
     await _loadOffices();
+    if ((widget.initialHtml ?? '').isNotEmpty) await _refreshPages();
 
     if (confirmOnly && mounted) {
       await _loadPreview();
@@ -385,7 +401,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     try {
       final htmlText = await _currentHtml();
 
-      final result = await _service.createOrUpdatePolicy(
+      final result = await _service.saveDraft(
+        _userId!,
         _buildProcedure(htmlText, isDraft: true),
       );
       _applySaved(result);
@@ -636,10 +653,81 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 </table>''';
   }
 
+  /// Renders the document offscreen at exactly one page width and counts
+  /// how many pages its height spans. Walang js interop: ang loob ng iframe
+  /// ang nag-po-postMessage ng height. Returns null if measuring failed.
+  Future<int?> _countPages(String fullHtml) async {
+    final id = 'pp${DateTime.now().microsecondsSinceEpoch}';
+    final probe =
+        '<script>window.addEventListener("load",function(){'
+        'setTimeout(function(){'
+        'var h=Math.max(document.documentElement.scrollHeight,'
+        'document.body?document.body.scrollHeight:0);'
+        'parent.postMessage("pagesProbe|$id|"+h,"*");'
+        '},300);});</script>';
+    final i = fullHtml.lastIndexOf('</body>');
+    final probed =
+        i == -1
+            ? fullHtml + probe
+            : fullHtml.substring(0, i) + probe + fullHtml.substring(i);
+
+    final done = Completer<int?>();
+    late final StreamSubscription<html.MessageEvent> sub;
+    sub = html.window.onMessage.listen((e) {
+      final d = e.data;
+      if (d is! String || !d.startsWith('pagesProbe|$id|')) return;
+      final h = double.tryParse(d.split('|').last);
+      if (done.isCompleted) return;
+      if (h == null) {
+        done.complete(null);
+        return;
+      }
+      final pages = math.max(1, (h / _pageContentHeightPx).ceil());
+      debugPrint(
+        'Pages: contentHeight=$h, page=$_pageContentHeightPx -> $pages',
+      );
+      done.complete(pages);
+    });
+
+    final frame =
+        html.IFrameElement()
+          ..style.position = 'fixed'
+          ..style.left = '-10000px'
+          ..style.top = '0'
+          ..style.width = '${_pageContentWidthPx}px'
+          ..style.height = '${_pageContentHeightPx}px'
+          ..style.border = 'none'
+          ..style.visibility = 'hidden'
+          ..srcdoc = probed;
+    html.document.body?.append(frame);
+
+    try {
+      return await done.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => null,
+      );
+    } catch (e) {
+      debugPrint('Count pages failed: $e');
+      return null;
+    } finally {
+      await sub.cancel();
+      frame.remove();
+    }
+  }
+
+  /// Auto-fills the "Pages" header value from the current editor content.
+  Future<void> _refreshPages([String? body]) async {
+    body ??= sanitize(await _currentHtml());
+    final n = await _countPages(buildPreviewDocument(_buildHeaderHtml(), body));
+    if (n == null || !mounted) return;
+    _hdr['pages']!.text = n <= 1 ? '1' : '1-$n';
+  }
+
   Future<void> _loadPreview() async {
     setState(() => _previewLoading = true);
     try {
       final body = sanitize(await _currentHtml());
+      await _refreshPages(body); // set Pages before building the header
       final fullHtml = buildPreviewDocument(_buildHeaderHtml(), body);
       _previewHtml = fullHtml;
 
@@ -717,6 +805,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     if (i == _step) return;
     if (i > _step && !_headerValid()) return;
     if (_step == 1) await _captureEditor();
+    if (i != 1 && i != 2)
+      await _refreshPages(); // step 2 = _loadPreview ang mag-refresh
     if (!mounted) return;
     setState(() => _step = i);
     if (i == 2) _loadPreview();
@@ -733,6 +823,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   Future<void> _back() async {
     if (_step > 0) {
       if (_step == 1) await _captureEditor();
+      if (_step - 1 == 0 || _step - 1 == 3) await _refreshPages();
       if (!mounted) return;
       setState(() => _step--);
       if (_step == 2) _loadPreview();
@@ -758,7 +849,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
             style: IconButton.styleFrom(
               side: BorderSide(color: Colors.grey.shade300),
             ),
-            onPressed: _close,
+            onPressed: _requestClose,
           ),
         ),
         title: Text(
@@ -806,7 +897,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   Future<void> _switchTab(int i) async {
     if (i == _tab) return;
+    if (_tab == 1 && !await _confirmLeaveHistory()) return;
     if (_tab == 0 && _step == 1) await _captureEditor();
+    if (i == 1) await _refreshPages(); // auto Pages para sa History Log
     if (!mounted) return;
     setState(() => _tab = i);
     if (i == 1) _loadHistory();
@@ -816,9 +909,60 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     for (final r in _logRows) {
       r.dispose();
     }
+    for (final r in _removedRows) {
+      r.dispose();
+    }
     _logRows = [];
+    _removedRows.clear();
   }
 
+  // Future<void> _loadHistory() async {
+  //   if (_id == null) {
+  //     setState(() {
+  //       _history = null;
+  //       _historyError = null;
+  //     });
+  //     return;
+  //   }
+  //   if (_historyLoaded) return;
+
+  //   setState(() {
+  //     _historyLoading = true;
+  //     _historyError = null;
+  //   });
+  //   try {
+  //     if (!_statusChecked) {
+  //       final p = await _service.getById(_id!);
+  //       _isDraft = p.isDraft ?? true;
+  //       _statusChecked = true;
+  //     }
+
+  //     // Draft pa lang: locked ang History Log, wag mag-load
+  //     if (_isDraft) return;
+
+  //     final h = await _papHistoryLog.getHistoryLog(_id!);
+  //     if (!mounted) return;
+  //     _disposeLogRows();
+  //     final rows = [
+  //       for (final l in h.policyAndProcedureLogList) _LogRow.fromModel(l),
+  //     ];
+  //     if (rows.isEmpty) {
+  //       rows.add(_LogRow()..page.text = _hdr['pages']!.text);
+  //     }
+  //     setState(() {
+  //       _history = h;
+  //       _logRows = rows;
+  //       _historyLoaded = true;
+  //       _logDirty = false;
+  //     });
+  //   } catch (e) {
+  //     debugPrint('History load failed: $e');
+  //     if (!mounted) return;
+  //     setState(() => _historyError = 'Failed to load history log');
+  //   } finally {
+  //     if (mounted) setState(() => _historyLoading = false);
+  //   }
+  // }
   Future<void> _loadHistory() async {
     if (_id == null) {
       setState(() {
@@ -834,26 +978,20 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       _historyError = null;
     });
     try {
-      if (!_statusChecked) {
-        final p = await _service.getById(_id!);
-        _isDraft = p.isDraft ?? true;
-        _statusChecked = true;
-      }
-
-      // Draft pa lang: locked ang History Log, wag mag-load
-      if (_isDraft) return;
-
       final h = await _papHistoryLog.getHistoryLog(_id!);
       if (!mounted) return;
       _disposeLogRows();
       final rows = [
         for (final l in h.policyAndProcedureLogList) _LogRow.fromModel(l),
       ];
-      if (rows.isEmpty) rows.add(_LogRow());
+      if (rows.isEmpty) {
+        rows.add(_LogRow()..page.text = _hdr['pages']!.text);
+      }
       setState(() {
         _history = h;
         _logRows = rows;
         _historyLoaded = true;
+        _logDirty = false;
       });
     } catch (e) {
       debugPrint('History load failed: $e');
@@ -864,12 +1002,22 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
-  void _addLogRow() => setState(() => _logRows.add(_LogRow()));
+  void _addLogRow() => setState(() {
+    final r = _LogRow();
+    r.page.text = _hdr['pages']!.text; // auto-fill, hindi na i-type
+    _logRows.add(r);
+    _logDirty = true;
+  });
 
   void _removeLogRow(int i) {
     setState(() {
-      _logRows[i].dispose();
-      _logRows.removeAt(i);
+      final r = _logRows.removeAt(i);
+      if (r.source != null) {
+        _removedRows.add(r); // isasama sa save bilang isDeleted
+      } else {
+        r.dispose();
+      }
+      _logDirty = true;
     });
   }
 
@@ -881,7 +1029,163 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       lastDate: DateTime(2100),
     );
     if (d == null) return;
-    setState(() => r.date = d);
+    setState(() {
+      r.date = d;
+      _logDirty = true;
+    });
+  }
+
+  bool _isRowEmpty(_LogRow r) =>
+      r.code.text.trim().isEmpty &&
+      r.page.text.trim().isEmpty &&
+      r.revision.text.trim().isEmpty &&
+      r.reasons.text.trim().isEmpty;
+
+  void _pruneEmptyRows() {
+    final empty = _logRows.where(_isRowEmpty).toList();
+    if (empty.isEmpty) return;
+    setState(() {
+      _logRows.removeWhere(empty.contains);
+      for (final r in empty) {
+        if (r.source != null) {
+          _removedRows.add(r);
+          _logDirty = true;
+        } else {
+          r.dispose();
+        }
+      }
+    });
+  }
+
+  String? _validateLog() {
+    for (var i = 0; i < _logRows.length; i++) {
+      final r = _logRows[i];
+      final n = i + 1;
+      if (r.code.text.trim().isEmpty) {
+        return 'Row $n: Document Code is required';
+      }
+      if (r.date == null) return 'Row $n: Date is required';
+      if (r.reasons.text.trim().isEmpty) return 'Row $n: Reason is required';
+    }
+    return null;
+  }
+
+  Future<bool> _saveHistory() async {
+    if (_savingLog || _id == null) return false;
+
+    _pruneEmptyRows();
+
+    final err = _validateLog();
+    if (err != null) {
+      MotionToast.error(
+        title: const Text('Incomplete Row'),
+        description: Text(err),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return false;
+    }
+
+    setState(() => _savingLog = true);
+    try {
+      final h = _history;
+
+      Map<String, dynamic> rowJson(_LogRow r, {bool deleted = false}) => {
+        'id': r.source?.id ?? 0,
+        'isDeleted': deleted,
+        'rowVersion': r.source?.rowVersion,
+        'policyAndProcedureHistoryLogId': h?.id ?? 0,
+        'documentCode': r.code.text.trim(),
+        'pageNo': r.page.text.trim(),
+        'revision': r.revision.text.trim(),
+        'date': (r.date ?? DateTime.now()).toIso8601String(),
+        'reasons': r.reasons.text.trim(),
+      };
+
+      final body = {
+        'id': h?.id ?? 0,
+        'isDeleted': false,
+        'rowVersion': h?.rowVersion,
+        'policyAndProcedureId': _id,
+        'titleName':
+            (h?.titleName.isNotEmpty ?? false)
+                ? h!.titleName
+                : _hdr['title']!.text.trim(),
+        'date':
+            (h?.effectiveDate ?? _effectivityDate ?? DateTime.now())
+                .toIso8601String(),
+        'policyAndProcedureLogList': [
+          for (final r in _logRows) rowJson(r),
+          for (final r in _removedRows) rowJson(r, deleted: true),
+        ],
+      };
+
+      await _papHistoryLog.saveHistoryLog(body);
+
+      if (!mounted) return true;
+      _logDirty = false;
+      _historyLoaded = false;
+      MotionToast.success(
+        title: const Text('Success'),
+        description: const Text('History log saved'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      await _loadHistory(); // para makuha ang bagong ids at rowVersion
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      MotionToast.error(
+        title: const Text('Failed to Save'),
+        description: Text('$e', maxLines: 3, overflow: TextOverflow.ellipsis),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return false;
+    } finally {
+      if (mounted) setState(() => _savingLog = false);
+    }
+  }
+
+  /// true = pwede nang umalis
+  Future<bool> _confirmLeaveHistory() async {
+    _pruneEmptyRows();
+    if (!_logDirty) return true;
+
+    final choice = await showDialog<String>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Unsaved changes'),
+            content: const Text(
+              'You have unsaved changes in the History Log. What do you want to do?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, 'cancel'),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, 'discard'),
+                child: const Text('Discard'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, 'save'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+    );
+
+    if (choice == 'discard') {
+      _logDirty = false;
+      _historyLoaded = false; // reload from server sa susunod
+      _removedRows.clear();
+      return true;
+    }
+    if (choice == 'save') return _saveHistory();
+    return false;
   }
 
   Widget _buildTopTabs() {
@@ -1001,12 +1305,15 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     String? hint,
     int? maxLines = 1,
     int minLines = 1,
+    bool readOnly = false,
   }) {
     return TextField(
       controller: c,
+      readOnly: readOnly,
       minLines: minLines,
       maxLines: maxLines,
       keyboardType: TextInputType.multiline,
+      onChanged: (_) => _logDirty = true,
       style: GoogleFonts.plusJakartaSans(fontSize: 12),
       decoration: _logDecoration(hint: hint),
     );
@@ -1094,10 +1401,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
         ),
       );
     }
-    if (!_statusChecked) {
-      return _card(child: const Center(child: CircularProgressIndicator()));
-    }
-    if (_isDraft) return _buildHistoryLocked();
 
     final h = _history;
     final title =
@@ -1140,17 +1443,51 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                   ),
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: _addLogRow,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Row', style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryColor,
-                  side: BorderSide(color: primaryColor),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _addLogRow,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text(
+                      'Add Row',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      side: BorderSide(color: primaryColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _savingLog ? null : _saveHistory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child:
+                        _savingLog
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Save',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1211,7 +1548,12 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: _logField(r.page, hint: 'e.g. 1-8'),
+                                    child: _logField(
+                                      r.page,
+                                      hint: 'Auto',
+                                      // bagong row = auto, lumang rows = saved value
+                                      readOnly: r.source == null,
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -1597,17 +1939,26 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   Timer? _frameGuard;
 
   void _setFramePointer(bool blocked) {
-    final frame = _previewFrame;
-    if (frame == null) return;
     final v = blocked ? 'none' : 'auto';
-    frame.style.pointerEvents = v;
 
-    html.Element? p = frame.parent;
-    for (var i = 0; i < 4 && p != null; i++) {
-      if ((p.localName).startsWith('flt-platform-view')) {
-        p.style.pointerEvents = v;
+    final frames = <html.Element>[
+      ...html.document.querySelectorAll('iframe'),
+      ...?html.document
+          .querySelector('flt-glass-pane')
+          ?.shadowRoot
+          ?.querySelectorAll('iframe'),
+    ];
+
+    for (final frame in frames) {
+      frame.style.pointerEvents = v;
+
+      html.Element? p = frame.parent;
+      for (var i = 0; i < 4 && p != null; i++) {
+        if ((p.localName).startsWith('flt-platform-view')) {
+          p.style.pointerEvents = v;
+        }
+        p = p.parent;
       }
-      p = p.parent;
     }
   }
 
@@ -1944,7 +2295,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               ),
               const SizedBox(height: 14),
               _cols([
-                _field('pages', 'Pages', hint: '', readOnly: true),
+                _field('pages', 'Pages', hint: 'Auto', readOnly: true),
                 _field(
                   'effectivity',
                   'Effectivity Date',
