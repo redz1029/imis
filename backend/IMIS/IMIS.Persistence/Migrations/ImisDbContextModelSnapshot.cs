@@ -163,6 +163,9 @@ namespace IMIS.Persistence.Migrations
                     b.Property<string>("FindingAndRemarks")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FindingType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 

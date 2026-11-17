@@ -11,6 +11,9 @@ namespace IMIS.Application.AuditChecklistModule
         public bool? Conforming { get; set; }
         public string? FindingAndRemarks { get; set; }
 
+        /// <summary>NC or OFI of a "N" answer (null otherwise): what the audit report fetches.</summary>
+        public string? FindingType { get; set; }
+
         public required int AuditPlanEntryId { get; set; }
 
         // FIX: AuditSchedule is now required on the entity — must be set
@@ -64,6 +67,7 @@ namespace IMIS.Application.AuditChecklistModule
             Id = entity.Id;
             Conforming = entity.Conforming;
             FindingAndRemarks = entity.FindingAndRemarks;
+            FindingType = AuditChecklist.NormalizeFindingType(entity.Conforming, entity.FindingType);
             AuditPlanEntryId = entity.AuditPlanEntryId;
             AuditScheduleId = entity.AuditScheduleId;
             AuditChecklistQNAId = entity.AuditChecklistQNAId;
@@ -154,6 +158,7 @@ namespace IMIS.Application.AuditChecklistModule
                 Id = Id,
                 Conforming = Conforming,
                 FindingAndRemarks = FindingAndRemarks,
+                FindingType = AuditChecklist.NormalizeFindingType(Conforming, FindingType),
                 AuditPlanEntryId = AuditPlanEntryId,
                 AuditScheduleId = AuditScheduleId,
                 AuditChecklistQNAId = AuditChecklistQNAId,

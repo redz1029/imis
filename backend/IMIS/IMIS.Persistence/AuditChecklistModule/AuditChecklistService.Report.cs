@@ -21,6 +21,7 @@ namespace IMIS.Persistence.AuditChecklistModule
         private const string AuditReportEntityType = "AuditReport";
         private const string DefaultAuditPurpose = "INTERNAL QUALITY AUDIT";
         private const string NonconformityStatusName = "NC";
+        private const string OpportunityStatusName = "OFI";
 
         /// <summary>Raises / refreshes the report of the schedule the saved row belongs to.</summary>
         private async Task SyncAuditReportForRowAsync(int checklistId, CancellationToken cancellationToken)
@@ -96,6 +97,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     ClauseRef = c.AuditChecklistQNA!.IsoStandard!.ClauseRef,
                     Question = c.AuditChecklistQNA.Question,
                     Conforming = c.Conforming,
+                    FindingType = c.FindingType,
                     FindingAndRemarks = c.FindingAndRemarks,
                     Auditees = c.Auditees
                 })
@@ -187,27 +189,31 @@ namespace IMIS.Persistence.AuditChecklistModule
                 }
             }
 
-            // Summary of Findings: one NC line per non-conforming clause.
-            var ncRows = rows
+            // Summary of Findings: one line per "N" clause, NC or OFI as the
+            // auditor typed it on the checklist. Nothing is chosen in the report.
+            var findingRows = rows
                 .Where(r => r.Conforming == false)
                 .OrderBy(r => r.ClauseRef, new ClauseNumberComparer())
                 .ToList();
-            var ncRowIds = ncRows.Select(r => r.Id).ToList();
+            var findingRowIds = findingRows.Select(r => r.Id).ToList();
 
-            var ncars = ncRowIds.Count == 0
+            // Only an NC raises an NCAR; an OFI line carries none.
+            var ncars = findingRowIds.Count == 0
                 ? new List<NonconformingActionReport>()
                 : await _dbContext.Set<NonconformingActionReport>()
-                    .Where(n => n.AuditChecklistId != null && ncRowIds.Contains(n.AuditChecklistId.Value))
+                    .Where(n => n.AuditChecklistId != null && findingRowIds.Contains(n.AuditChecklistId.Value))
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
             var ncarByRow = ncars.ToDictionary(n => n.AuditChecklistId!.Value);
 
-            var ncStatusId = await _dbContext.Set<AuditNcarStatus>()
+            var statusIds = await _dbContext.Set<AuditNcarStatus>()
                 .AsNoTracking()
-                .Where(s => s.ncarStatus != null && s.ncarStatus.Trim().ToUpper() == NonconformityStatusName)
-                .Select(s => (int?)s.Id)
-                .FirstOrDefaultAsync(cancellationToken)
+                .Where(s => s.ncarStatus != null)
+                .Select(s => new { s.Id, Name = s.ncarStatus!.Trim().ToUpper() })
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+            int? ncStatusId = statusIds.FirstOrDefault(s => s.Name == NonconformityStatusName)?.Id;
+            int? ofiStatusId = statusIds.FirstOrDefault(s => s.Name == OpportunityStatusName)?.Id;
 
             // IgnoreQueryFilters above also brings back soft-deleted lines.
             var current = (report.AuditSummaryFIndings ?? new List<AuditSummaryFIndings>())
@@ -221,25 +227,30 @@ namespace IMIS.Persistence.AuditChecklistModule
             _dbContext.Set<AuditSummaryFIndings>().RemoveRange(legacy);
 
             // A fetched line follows its checklist row: it goes when the row is
-            // no longer non-conforming. What the auditor typed in Findings is
-            // never overwritten. Manual lines are not touched.
+            // no longer a "N" (NC or OFI) and changes between NC and OFI with it.
+            // What the auditor typed in Findings is never overwritten. Manual
+            // lines are not touched.
             var fetched = current
                 .Where(f => f.AuditChecklistId != null)
                 .GroupBy(f => f.AuditChecklistId!.Value)
                 .ToDictionary(g => g.Key, g => g.OrderBy(f => f.Id).First());
-            var ncRowIdSet = ncRowIds.ToHashSet();
+            var findingRowIdSet = findingRowIds.ToHashSet();
             _dbContext.Set<AuditSummaryFIndings>().RemoveRange(
                 current.Where(f => f.AuditChecklistId != null
-                                   && (!ncRowIdSet.Contains(f.AuditChecklistId.Value)
+                                   && (!findingRowIdSet.Contains(f.AuditChecklistId.Value)
                                        || !ReferenceEquals(fetched[f.AuditChecklistId.Value], f))));
 
             // Fetched lines come first, in clause order; manual lines follow in
             // the order the auditor wrote them.
             var no = 1;
-            foreach (var row in ncRows)
+            foreach (var row in findingRows)
             {
                 var clause = row.ClauseRef.Trim();
+                var isOfi = AuditChecklist.NormalizeFindingType(row.Conforming, row.FindingType) == AuditChecklist.OpportunityType;
+                var statusId = isOfi ? ofiStatusId : ncStatusId;
                 ncarByRow.TryGetValue(row.Id, out var ncar);
+                // An OFI has no NCAR (one left from an earlier NC is withdrawn by the checklist save).
+                if (isOfi) ncar = null;
                 if (ncar != null) ncar.AuditReportId = report.Id;
 
                 if (fetched.TryGetValue(row.Id, out var line))
@@ -247,7 +258,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     line.No = no++;
                     line.CriteriaText = clause;
                     line.NcarReferenceNumber = ncar?.ReferenceNumber;
-                    line.AuditNcarStatusId = ncStatusId;
+                    line.AuditNcarStatusId = statusId;
                     continue;
                 }
 
@@ -261,7 +272,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     CriteriaText = clause,
                     NcarReferenceNumber = ncar?.ReferenceNumber,
                     AuditChecklistId = row.Id,
-                    AuditNcarStatusId = ncStatusId,
+                    AuditNcarStatusId = statusId,
                     AuditReportId = report.Id,
                     IsDeleted = false
                 });
@@ -294,6 +305,7 @@ namespace IMIS.Persistence.AuditChecklistModule
             public string ClauseRef { get; init; } = string.Empty;
             public string Question { get; init; } = string.Empty;
             public bool? Conforming { get; init; }
+            public string? FindingType { get; init; }
             public string? FindingAndRemarks { get; init; }
             public string? Auditees { get; init; }
         }

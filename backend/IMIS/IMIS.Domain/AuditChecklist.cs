@@ -8,6 +8,26 @@ namespace IMIS.Domain
         public bool? Conforming { get; set; }
         public string? FindingAndRemarks { get; set; }
 
+        /// <summary>
+        /// What a "N" answer is: <see cref="NonconformityType"/> (NC) or
+        /// <see cref="OpportunityType"/> (OFI). Null while the row is not "N".
+        /// A "N" row saved before this existed has none and counts as NC.
+        /// The audit report fetches its Summary of Findings line from it.
+        /// </summary>
+        public string? FindingType { get; set; }
+
+        public const string NonconformityType = "NC";
+        public const string OpportunityType = "OFI";
+
+        /// <summary>The finding type a row may hold: NC or OFI only when it is answered "N", otherwise none.</summary>
+        public static string? NormalizeFindingType(bool? conforming, string? findingType)
+        {
+            if (conforming != false) return null;
+            return string.Equals(findingType?.Trim(), OpportunityType, System.StringComparison.OrdinalIgnoreCase)
+                ? OpportunityType
+                : NonconformityType;
+        }
+
         // AUDITEE/S is a STRING on the CRMC form header (e.g.
         // "Chief of Hospital, Medical Records Officer, Section Head").
         // Deliberately NOT modeled as an entity/navigation — the checklist

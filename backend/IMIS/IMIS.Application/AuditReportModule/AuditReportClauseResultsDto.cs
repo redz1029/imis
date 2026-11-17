@@ -10,7 +10,10 @@ namespace IMIS.Application.AuditReportModule
     {
         public int AuditScheduleId { get; set; }
         public int ConformingCount { get; set; }
+        /// <summary>"N" clauses typed as NC.</summary>
         public int NonConformingCount { get; set; }
+        /// <summary>"N" clauses typed as OFI.</summary>
+        public int OfiCount { get; set; }
         public int PendingCount { get; set; }
         public List<AuditReportClauseResultDto> Items { get; set; } = new();
     }
@@ -22,9 +25,10 @@ namespace IMIS.Application.AuditReportModule
         public int TotalCount { get; set; }
         public int ConformingCount { get; set; }
         public int NonConformingCount { get; set; }
+        public int OfiCount { get; set; }
         public int PendingCount { get; set; }
 
-        /// <summary>NCARs raised from the schedule's non-conforming clauses.</summary>
+        /// <summary>NCARs raised from the schedule's non-conforming (NC) clauses.</summary>
         public int NcarCount { get; set; }
     }
 
@@ -36,6 +40,9 @@ namespace IMIS.Application.AuditReportModule
 
         /// <summary>True = conforming, false = non-conforming, null = not answered yet.</summary>
         public bool? Conforming { get; set; }
+
+        /// <summary>NC or OFI of a "N" clause, as typed on the checklist; null otherwise.</summary>
+        public string? FindingType { get; set; }
         public string? FindingAndRemarks { get; set; }
 
         /// <summary>The NCAR raised for a non-conforming clause.</summary>

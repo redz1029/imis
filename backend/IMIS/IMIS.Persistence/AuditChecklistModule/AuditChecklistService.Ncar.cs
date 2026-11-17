@@ -40,6 +40,13 @@ namespace IMIS.Persistence.AuditChecklistModule
             return (true, null);
         }
 
+        /// <summary>
+        /// Only a "N" answer typed as NC raises an NCAR. An OFI (opportunity for
+        /// improvement) is reported in the audit report but is not a nonconformity.
+        /// </summary>
+        private static bool RaisesNcar(AuditChecklistDto dto) =>
+            AuditChecklist.NormalizeFindingType(dto.Conforming, dto.FindingType) == AuditChecklist.NonconformityType;
+
         /// <summary>Error message when the NCAR of the row is already being worked on and this save would change it; otherwise null.</summary>
         private async Task<string?> CheckNcarChangeAllowedAsync(AuditChecklistDto dto, CancellationToken cancellationToken)
         {
@@ -52,8 +59,8 @@ namespace IMIS.Persistence.AuditChecklistModule
             if (ncar == null || !await IsNcarProcessedAsync(ncar, cancellationToken).ConfigureAwait(false))
                 return null;
 
-            if (dto.Conforming != false)
-                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming.";
+            if (!RaisesNcar(dto))
+                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming (NC).";
 
             // A finding the auditor wrote on the NCAR itself is not the checklist's to change.
             var findings = string.IsNullOrWhiteSpace(dto.FindingAndRemarks)
@@ -95,12 +102,12 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .ConfigureAwait(false);
             var hasLiveNcar = ncar != null && !ncar.IsDeleted;
 
-            if (dto.Conforming != false)
+            if (!RaisesNcar(dto))
             {
                 if (!hasLiveNcar) return (true, null);
 
                 if (await IsNcarProcessedAsync(ncar!, cancellationToken).ConfigureAwait(false))
-                    return (false, $"NCAR {ncar!.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming.");
+                    return (false, $"NCAR {ncar!.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming (NC).");
 
                 ncar!.IsDeleted = true;
                 await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -211,7 +211,9 @@ namespace IMIS.Persistence.AuditReportModule
                     AuditScheduleId = g.Key,
                     Total = g.Count(),
                     Conforming = g.Count(c => c.Conforming == true),
-                    NonConforming = g.Count(c => c.Conforming == false)
+                    // A "N" is an NC unless the auditor typed it as an OFI.
+                    Ofi = g.Count(c => c.Conforming == false && c.FindingType == AuditChecklist.OpportunityType),
+                    NonConforming = g.Count(c => c.Conforming == false && c.FindingType != AuditChecklist.OpportunityType)
                 })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -231,7 +233,8 @@ namespace IMIS.Persistence.AuditReportModule
                     TotalCount = c.Total,
                     ConformingCount = c.Conforming,
                     NonConformingCount = c.NonConforming,
-                    PendingCount = c.Total - c.Conforming - c.NonConforming,
+                    OfiCount = c.Ofi,
+                    PendingCount = c.Total - c.Conforming - c.NonConforming - c.Ofi,
                     NcarCount = ncarCounts.TryGetValue(c.AuditScheduleId, out var n) ? n : 0
                 })
                 .ToList();
@@ -359,6 +362,7 @@ namespace IMIS.Persistence.AuditReportModule
                     Question = c.AuditChecklistQNA!.Question,
                     ClauseRef = c.AuditChecklistQNA.IsoStandard!.ClauseRef,
                     c.Conforming,
+                    c.FindingType,
                     c.FindingAndRemarks
                 })
                 .ToListAsync(cancellationToken)
@@ -391,6 +395,7 @@ namespace IMIS.Persistence.AuditReportModule
                         ClauseRef = r.ClauseRef.Trim(),
                         Question = r.Question,
                         Conforming = r.Conforming,
+                        FindingType = AuditChecklist.NormalizeFindingType(r.Conforming, r.FindingType),
                         FindingAndRemarks = r.FindingAndRemarks,
                         NcarId = found ? ncar!.Id : null,
                         NcarReferenceNumber = found ? ncar!.ReferenceNumber : null,
@@ -403,7 +408,8 @@ namespace IMIS.Persistence.AuditReportModule
             {
                 AuditScheduleId = auditScheduleId,
                 ConformingCount = items.Count(i => i.Conforming == true),
-                NonConformingCount = items.Count(i => i.Conforming == false),
+                NonConformingCount = items.Count(i => i.FindingType == AuditChecklist.NonconformityType),
+                OfiCount = items.Count(i => i.FindingType == AuditChecklist.OpportunityType),
                 PendingCount = items.Count(i => i.Conforming == null),
                 Items = items
             };

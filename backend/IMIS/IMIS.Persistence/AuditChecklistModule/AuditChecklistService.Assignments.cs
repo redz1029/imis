@@ -832,6 +832,7 @@ namespace IMIS.Persistence.AuditChecklistModule
 
             entity.AuditChecklistQNAId = dto.AuditChecklistQNAId;
             entity.Conforming = dto.Conforming;
+            entity.FindingType = AuditChecklist.NormalizeFindingType(dto.Conforming, dto.FindingType);
             entity.FindingAndRemarks = dto.FindingAndRemarks;
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
