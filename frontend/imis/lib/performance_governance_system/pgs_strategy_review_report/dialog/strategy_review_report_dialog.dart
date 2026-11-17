@@ -754,6 +754,7 @@ class StrategyReviewReportDialogState
             child: _compactField(
               _measureActualCtrls[i],
               'e.g. 75% or 75',
+              maxLines: null,
               inputFormatters: _numericPercentFormatters,
             ),
           ),
@@ -895,7 +896,11 @@ class StrategyReviewReportDialogState
           const SizedBox(width: 8),
           Expanded(
             flex: 2,
-            child: _compactField(_kraActualCtrls[i], 'Actual to Date'),
+            child: _compactField(
+              _kraActualCtrls[i],
+              'Actual to Date',
+              maxLines: null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1350,12 +1355,55 @@ class StrategyReviewReportDialogState
     );
   }
 
+  // Widget _labeledField(
+  //   String label,
+  //   TextEditingController ctrl, {
+  //   int maxLines = 1,
+  //   List<TextInputFormatter>? inputFormatters,
+  // }) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         label,
+  //         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+  //       ),
+  //       const SizedBox(height: 4),
+  //       TextFormField(
+  //         controller: ctrl,
+  //         maxLines: maxLines,
+  //         inputFormatters: inputFormatters,
+  //         style: const TextStyle(fontSize: 13),
+  //         decoration: InputDecoration(
+  //           isDense: true,
+  //           contentPadding: const EdgeInsets.symmetric(
+  //             horizontal: 10,
+  //             vertical: 10,
+  //           ),
+  //           border: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(4),
+  //             borderSide: BorderSide(color: Colors.grey.shade300),
+  //           ),
+  //           enabledBorder: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(4),
+  //             borderSide: BorderSide(color: Colors.grey.shade300),
+  //           ),
+  //           focusedBorder: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(4),
+  //             borderSide: BorderSide(color: primaryColor),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
   Widget _labeledField(
     String label,
     TextEditingController ctrl, {
-    int maxLines = 1,
+    int? maxLines = 1,
     List<TextInputFormatter>? inputFormatters,
   }) {
+    final multiline = maxLines != 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1366,7 +1414,9 @@ class StrategyReviewReportDialogState
         const SizedBox(height: 4),
         TextFormField(
           controller: ctrl,
+          minLines: 1,
           maxLines: maxLines,
+          keyboardType: multiline ? TextInputType.multiline : null,
           inputFormatters: inputFormatters,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
@@ -1396,12 +1446,15 @@ class StrategyReviewReportDialogState
   Widget _compactField(
     TextEditingController ctrl,
     String hint, {
-    int maxLines = 1,
+    int? maxLines = 1,
     List<TextInputFormatter>? inputFormatters,
   }) {
+    final multiline = maxLines != 1;
     return TextFormField(
       controller: ctrl,
+      minLines: 1,
       maxLines: maxLines,
+      keyboardType: multiline ? TextInputType.multiline : null,
       inputFormatters: inputFormatters,
       style: const TextStyle(fontSize: 13),
       decoration: InputDecoration(
