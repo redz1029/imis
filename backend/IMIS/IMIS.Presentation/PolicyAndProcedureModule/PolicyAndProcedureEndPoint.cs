@@ -64,7 +64,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             })
             .WithTags(_policyAndProcedureEndPoint)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View))
-             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true);
 
             app.MapDelete("pgssignatory/{papid:long}", async (long papid, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

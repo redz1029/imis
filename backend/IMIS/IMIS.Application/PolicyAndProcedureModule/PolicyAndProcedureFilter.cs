@@ -2,11 +2,11 @@
 {
     public class PolicyAndProcedureFilter
     {
-        public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
-        public int? SectionId { get; set; }
-        public DateTime? FromDate { get; set; }  
-        public DateTime? ToDate { get; set; }
-        public string? Search { get; set; }       
+        public int page { get; set; } = 1;
+        public int pageSize { get; set; } = 10;
+        public int? sectionId { get; set; }
+        public DateTime? fromDate { get; set; }  
+        public DateTime? toDate { get; set; }
+        public string? search { get; set; }       
     }
 }

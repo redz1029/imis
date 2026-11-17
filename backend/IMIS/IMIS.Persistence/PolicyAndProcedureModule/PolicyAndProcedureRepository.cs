@@ -40,22 +40,22 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     || p.PAPSignatories.Any(s => !s.IsDeleted));
             }
 
-            if (filter.SectionId.HasValue)
+            if (filter.sectionId.HasValue)
             {
                 query = query.Where(p =>
-                    p.SectionId == filter.SectionId.Value ||
-                    p.Section!.ParentOfficeId == filter.SectionId.Value);
+                    p.SectionId == filter.sectionId.Value ||
+                    p.Section!.ParentOfficeId == filter.sectionId.Value);
             }
 
-            if (filter.FromDate.HasValue)
-                query = query.Where(p => p.EffectiveDate >= filter.FromDate.Value);
+            if (filter.fromDate.HasValue)
+                query = query.Where(p => p.EffectiveDate >= filter.fromDate.Value);
 
-            if (filter.ToDate.HasValue)
-                query = query.Where(p => p.EffectiveDate <= filter.ToDate.Value);
+            if (filter.toDate.HasValue)
+                query = query.Where(p => p.EffectiveDate <= filter.toDate.Value);
 
-            if (!string.IsNullOrWhiteSpace(filter.Search))
+            if (!string.IsNullOrWhiteSpace(filter.search))
             {
-                var term = filter.Search.Trim();
+                var term = filter.search.Trim();
                 query = query.Where(p =>
                     (p.Title != null && p.Title.Contains(term)) ||
                     (p.DocumentCode != null && p.DocumentCode.Contains(term)));

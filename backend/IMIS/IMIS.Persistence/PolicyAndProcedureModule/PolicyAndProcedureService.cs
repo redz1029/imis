@@ -55,7 +55,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         public async Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetFilteredAsync(PolicyAndProcedureFilter filter, string roleId, CancellationToken cancellationToken)
         {
             DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long> Empty() =>
-                DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(new List<PolicyAndProcedure>(), filter.Page, filter.PageSize, 0);
+                DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(new List<PolicyAndProcedure>(), filter.page, filter.pageSize, 0);
 
             var currentUser = await GetCurrentUserAsync();
 
@@ -157,9 +157,9 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             var totalCount = ordered.Count;
 
-            var pageEntities = ordered.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();
+            var pageEntities = ordered.Skip((filter.page - 1) * filter.pageSize).Take(filter.pageSize).ToList();
 
-            var result = DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(pageEntities, filter.Page, filter.PageSize, totalCount);
+            var result = DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(pageEntities, filter.page, filter.pageSize, totalCount);
 
             var byId = pageEntities.ToDictionary(e => e.Id);
 
