@@ -684,12 +684,19 @@ class _ScheduleRow extends StatelessWidget {
               if (findings != null)
                 _Chip(
                   'Findings',
-                  findings.nonConformingCount == 0
+                  findings.nonConformingCount == 0 && findings.ofiCount == 0
                       ? (findings.pendingCount > 0 ? 'Checklist pending' : 'All conforming')
-                      : '${findings.nonConformingCount} NC',
-                  color: findings.nonConformingCount == 0
-                      ? kSuccess
-                      : Colors.red.shade400,
+                      : [
+                          if (findings.nonConformingCount > 0)
+                            '${findings.nonConformingCount} NC',
+                          if (findings.ofiCount > 0)
+                            '${findings.ofiCount} OFI',
+                        ].join(', '),
+                  color: findings.nonConformingCount > 0
+                      ? Colors.red.shade400
+                      : findings.ofiCount > 0
+                      ? Colors.orange.shade700
+                      : kSuccess,
                 ),
             ],
           ),

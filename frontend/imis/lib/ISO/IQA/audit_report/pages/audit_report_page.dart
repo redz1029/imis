@@ -48,9 +48,9 @@ class _ComFindingUI {
 }
 
 /// One line of the Summary of Findings. A line fetched from the audit checklist
-/// (one per non-conforming clause) keeps its clause, its NC status and its NCAR
-/// fixed and only its findings text is typed. A line the auditor adds is typed
-/// whole and is either NC or OFI.
+/// (one per clause answered N) keeps its clause, its NC or OFI status (typed on
+/// the checklist) and its NCAR fixed and only its findings text is typed. A
+/// line typed by hand in an earlier version keeps its own text fields.
 class _SummaryRowUI {
   int id;
   final int? auditChecklistId;
@@ -324,13 +324,6 @@ class _AuditReportPageState extends State<AuditReportPage> {
     }
     return options;
   }
-
-  int get _ncStatusId =>
-      _statusOptions.firstWhere((o) => o.name == 'NC').id;
-
-  void _addSummaryRow() => setState(
-    () => _summaryRows.add(_SummaryRowUI(statusId: _ncStatusId)),
-  );
 
   void _removeSummaryRow(_SummaryRowUI r) => setState(() {
     r.dispose();
@@ -717,36 +710,14 @@ class _AuditReportPageState extends State<AuditReportPage> {
       ),
     );
 
+    // NC or OFI is what the auditor typed on the checklist: the report only
+    // shows it, it is never chosen here.
     Widget statusCell(_SummaryRowUI row) {
-      // A line fetched from the checklist is a non-conformity: it stays NC.
-      if (row.fromChecklist || !editable) {
-        return _resultCountChip(
-          _statusName(row.statusId),
-          null,
-          _statusName(row.statusId) == 'OFI'
-              ? Colors.orange.shade800
-              : Colors.red.shade700,
-        );
-      }
-      final options = _statusOptions;
-      final value =
-          options.any((o) => o.id == row.statusId) ? row.statusId : _ncStatusId;
-      return DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: value,
-          isDense: true,
-          isExpanded: true,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-          items: [
-            for (final o in options)
-              DropdownMenuItem<int>(value: o.id, child: Text(o.name)),
-          ],
-          onChanged: (v) => setState(() => row.statusId = v),
-        ),
+      final name = _statusName(row.statusId);
+      return _resultCountChip(
+        name,
+        null,
+        name == 'OFI' ? Colors.orange.shade800 : Colors.red.shade700,
       );
     }
 
@@ -858,29 +829,17 @@ class _AuditReportPageState extends State<AuditReportPage> {
             const Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: Text(
-                'No finding yet. A non-conforming clause on the audit '
-                'checklist is added here, or add a finding yourself.',
+                'No finding yet. A clause answered N on the audit checklist '
+                '(NC or OFI) is added here.',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             )
           else
             _summaryTable(),
-          if (_canEdit)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _addSummaryRow,
-                  icon: const Icon(Icons.add, color: primaryThemeColor),
-                  label: const Text('Add Finding'),
-                ),
-              ),
-            ),
           _autoNote(
-            'A non-conforming clause with its NCAR comes from the audit '
-            'checklist; write its finding here. Add a finding to record an '
-            'NC or an OFI of your own.',
+            'Every clause answered N on the audit checklist comes here with '
+            'the NC or OFI chosen there (an NC with its NCAR); write its '
+            'finding here.',
           ),
         ],
       ),
@@ -922,9 +881,14 @@ class _AuditReportPageState extends State<AuditReportPage> {
                         Colors.green.shade700,
                       ),
                       _resultCountChip(
-                        'Non-conforming',
+                        'NC',
                         results.nonConformingCount,
                         Colors.red.shade700,
+                      ),
+                      _resultCountChip(
+                        'OFI',
+                        results.ofiCount,
+                        Colors.orange.shade800,
                       ),
                       _resultCountChip(
                         'Pending',
@@ -953,7 +917,11 @@ class _AuditReportPageState extends State<AuditReportPage> {
   Widget _clauseResultRow(AuditReportClauseResult result) {
     final (label, color) = switch (result.conforming) {
       true => ('Conforming', Colors.green.shade700),
-      false => ('Non-conforming', Colors.red.shade700),
+      false when result.findingType == 'OFI' => (
+        'OFI',
+        Colors.orange.shade800,
+      ),
+      false => ('NC', Colors.red.shade700),
       null => ('Pending', Colors.grey.shade700),
     };
     final remarks = (result.findingAndRemarks ?? '').trim();

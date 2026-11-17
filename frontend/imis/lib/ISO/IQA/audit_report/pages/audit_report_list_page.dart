@@ -627,8 +627,8 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     );
   }
 
-  /// What the audit checklist found: the non-conforming clauses with the NCARs
-  /// already raised for them, or "All conforming" / "Checklist pending".
+  /// What the audit checklist found: the NC and OFI clauses with the NCARs
+  /// already raised for the NCs, or "All conforming" / "Checklist pending".
   Widget _findingsCell(AuditReport report) {
     final f = _findingsBySchedule[report.auditScheduleId];
 
@@ -649,10 +649,12 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
       ),
     );
 
-    if (f == null || f.totalCount == 0 || f.conformingCount + f.nonConformingCount == 0) {
+    if (f == null ||
+        f.totalCount == 0 ||
+        f.conformingCount + f.nonConformingCount + f.ofiCount == 0) {
       return chip('Checklist pending', Colors.grey.shade600);
     }
-    if (f.nonConformingCount == 0) {
+    if (f.nonConformingCount == 0 && f.ofiCount == 0) {
       return chip(
         f.pendingCount > 0
             ? '${f.conformingCount} conforming'
@@ -662,8 +664,12 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     }
     return Wrap(
       children: [
-        chip('${f.nonConformingCount} NC', Colors.red.shade700),
-        chip('${f.ncarCount} NCAR', Colors.purple.shade700),
+        if (f.nonConformingCount > 0)
+          chip('${f.nonConformingCount} NC', Colors.red.shade700),
+        if (f.ncarCount > 0)
+          chip('${f.ncarCount} NCAR', Colors.purple.shade700),
+        if (f.ofiCount > 0)
+          chip('${f.ofiCount} OFI', Colors.orange.shade800),
         if (f.conformingCount > 0)
           chip('${f.conformingCount} conforming', Colors.green.shade700),
       ],

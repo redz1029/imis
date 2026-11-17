@@ -18,6 +18,14 @@ class AuditChecklist {
   final bool? conforming;
   final String? findingAndRemarks;
 
+  /// What a "N" answer is: [nonconformity] (NC) or [opportunity] (OFI); null
+  /// while the row is not "N". The audit report fetches its Summary of
+  /// Findings line from it, so it is chosen here and never in the report.
+  final String? findingType;
+
+  static const String nonconformity = 'NC';
+  static const String opportunity = 'OFI';
+
   @JsonKey(defaultValue: 0)
   final int auditPlanEntryId;
 
@@ -68,6 +76,7 @@ class AuditChecklist {
     this.rowVersion,
     this.conforming,
     this.findingAndRemarks,
+    this.findingType,
     required this.auditPlanEntryId,
     required this.auditChecklistQNAId,
     this.auditScheduleId = 0,
@@ -101,13 +110,19 @@ class AuditChecklist {
   AuditChecklist copyWithResponse({
     bool? conforming,
     bool clearConforming = false,
+    String? findingType,
     String? findingAndRemarks,
     String? itemsAndQuestions,
   }) {
+    final nextConforming = clearConforming ? null : (conforming ?? this.conforming);
     return AuditChecklist(
       id: id,
       isDeleted: isDeleted,
       rowVersion: rowVersion,
+      // NC / OFI only means something while the row is "N".
+      findingType: nextConforming == false
+          ? (findingType ?? this.findingType ?? nonconformity)
+          : null,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
       auditScheduleId: auditScheduleId,
@@ -126,7 +141,7 @@ class AuditChecklist {
       assignedAuditorName: assignedAuditorName,
       ncarId: ncarId,
       ncarReferenceNumber: ncarReferenceNumber,
-      conforming: clearConforming ? null : (conforming ?? this.conforming),
+      conforming: nextConforming,
       findingAndRemarks: findingAndRemarks ?? this.findingAndRemarks,
     );
   }
@@ -139,6 +154,7 @@ class AuditChecklist {
       rowVersion: rowVersion,
       conforming: conforming,
       findingAndRemarks: findingAndRemarks,
+      findingType: findingType,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
       auditScheduleId: auditScheduleId,
@@ -169,6 +185,7 @@ class AuditChecklist {
       rowVersion: rowVersion,
       conforming: conforming,
       findingAndRemarks: findingAndRemarks,
+      findingType: findingType,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
       auditScheduleId: auditScheduleId,

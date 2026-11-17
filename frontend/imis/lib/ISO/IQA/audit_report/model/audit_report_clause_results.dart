@@ -4,6 +4,9 @@ class AuditReportClauseResults {
   final int auditScheduleId;
   final int conformingCount;
   final int nonConformingCount;
+
+  /// "N" clauses typed as OFI (opportunity for improvement).
+  final int ofiCount;
   final int pendingCount;
   final List<AuditReportClauseResult> items;
 
@@ -11,6 +14,7 @@ class AuditReportClauseResults {
     required this.auditScheduleId,
     this.conformingCount = 0,
     this.nonConformingCount = 0,
+    this.ofiCount = 0,
     this.pendingCount = 0,
     this.items = const [],
   });
@@ -20,6 +24,7 @@ class AuditReportClauseResults {
         auditScheduleId: (json['auditScheduleId'] as num?)?.toInt() ?? 0,
         conformingCount: (json['conformingCount'] as num?)?.toInt() ?? 0,
         nonConformingCount: (json['nonConformingCount'] as num?)?.toInt() ?? 0,
+        ofiCount: (json['ofiCount'] as num?)?.toInt() ?? 0,
         pendingCount: (json['pendingCount'] as num?)?.toInt() ?? 0,
         items: (json['items'] as List? ?? [])
             .map(
@@ -38,9 +43,12 @@ class AuditReportClauseResult {
 
   /// true = conforming, false = non-conforming, null = not answered yet.
   final bool? conforming;
+
+  /// NC or OFI of a "N" clause, as typed on the checklist.
+  final String? findingType;
   final String? findingAndRemarks;
 
-  /// The NCAR raised for a non-conforming clause.
+  /// The NCAR raised for a non-conforming (NC) clause.
   final int? ncarId;
   final String? ncarReferenceNumber;
   final String? ncarStatus;
@@ -50,6 +58,7 @@ class AuditReportClauseResult {
     required this.clauseRef,
     required this.question,
     this.conforming,
+    this.findingType,
     this.findingAndRemarks,
     this.ncarId,
     this.ncarReferenceNumber,
@@ -62,6 +71,7 @@ class AuditReportClauseResult {
         clauseRef: (json['clauseRef'] as String?) ?? '',
         question: (json['question'] as String?) ?? '',
         conforming: json['conforming'] as bool?,
+        findingType: json['findingType'] as String?,
         findingAndRemarks: json['findingAndRemarks'] as String?,
         ncarId: (json['ncarId'] as num?)?.toInt(),
         ncarReferenceNumber: json['ncarReferenceNumber'] as String?,
@@ -76,6 +86,7 @@ class AuditReportFindingsSummary {
   final int totalCount;
   final int conformingCount;
   final int nonConformingCount;
+  final int ofiCount;
   final int pendingCount;
   final int ncarCount;
 
@@ -84,6 +95,7 @@ class AuditReportFindingsSummary {
     this.totalCount = 0,
     this.conformingCount = 0,
     this.nonConformingCount = 0,
+    this.ofiCount = 0,
     this.pendingCount = 0,
     this.ncarCount = 0,
   });
@@ -94,6 +106,7 @@ class AuditReportFindingsSummary {
         totalCount: (json['totalCount'] as num?)?.toInt() ?? 0,
         conformingCount: (json['conformingCount'] as num?)?.toInt() ?? 0,
         nonConformingCount: (json['nonConformingCount'] as num?)?.toInt() ?? 0,
+        ofiCount: (json['ofiCount'] as num?)?.toInt() ?? 0,
         pendingCount: (json['pendingCount'] as num?)?.toInt() ?? 0,
         ncarCount: (json['ncarCount'] as num?)?.toInt() ?? 0,
       );

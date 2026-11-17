@@ -407,14 +407,143 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     openAuditChecklistPrintPreview(context, widget.auditScheduleId);
   }
 
-  void _setConforming(int index, bool? value) {
+  /// Y / N / cleared. An "N" is asked what it is — NC or OFI — so the audit
+  /// report fetches the right finding and nothing is chosen there. Closing the
+  /// prompt without choosing leaves the answer as it was.
+  Future<void> _setConforming(int index, bool? value) async {
+    String? type;
+    if (value == false) {
+      type = await _askFindingType(_rows[index].findingType);
+      if (type == null || !mounted) return;
+    }
     setState(() {
       _rows[index] = _rows[index].copyWithResponse(
         conforming: value,
         clearConforming: value == null,
+        findingType: type,
       );
       _dirty = true;
     });
+  }
+
+  /// Changes the type of a row that is already "N".
+  Future<void> _changeFindingType(int index) async {
+    final type = await _askFindingType(_rows[index].findingType);
+    if (type == null || !mounted || type == _rows[index].findingType) return;
+    setState(() {
+      _rows[index] = _rows[index].copyWithResponse(findingType: type);
+      _dirty = true;
+    });
+  }
+
+  /// The prompt shown when a clause is answered "N": NC or OFI.
+  Future<String?> _askFindingType(String? current) {
+    Widget option(
+      BuildContext ctx, {
+      required String type,
+      required String title,
+      required String note,
+      required Color color,
+    }) {
+      final selected = current == type;
+      return InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => Navigator.pop(ctx, type),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected ? color : Colors.grey.shade300,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  type,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      note,
+                      style: const TextStyle(fontSize: 12, color: kMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('What is this finding?'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Choose NC or OFI. The audit report lists it as chosen here.',
+                style: TextStyle(fontSize: 12.5, color: kMuted),
+              ),
+              const SizedBox(height: 14),
+              option(
+                ctx,
+                type: AuditChecklist.nonconformity,
+                title: 'Nonconformity',
+                note: 'An NCAR is raised for the audited office.',
+                color: Colors.red.shade700,
+              ),
+              const SizedBox(height: 10),
+              option(
+                ctx,
+                type: AuditChecklist.opportunity,
+                title: 'Opportunity for Improvement',
+                note: 'Listed in the audit report. No NCAR is raised.',
+                color: Colors.orange.shade800,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveAll() async {
@@ -1206,7 +1335,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     final selectedFg =
         value == true ? Colors.green.shade900 : Colors.red.shade900;
 
-    return SegmentedButton<bool>(
+    final control = SegmentedButton<bool>(
       emptySelectionAllowed: true,
       multiSelectionEnabled: false,
       showSelectedIcon: false,
@@ -1237,6 +1366,49 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       selected: value == null ? <bool>{} : <bool>{value},
       onSelectionChanged: (s) =>
           _setConforming(index, s.isEmpty ? null : s.first),
+    );
+
+    // A "N" shows what it was typed as; tapping it changes NC <-> OFI.
+    if (value != false) return control;
+    final isOfi = _rows[index].findingType == AuditChecklist.opportunity;
+    final color = isOfi ? Colors.orange.shade800 : Colors.red.shade700;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment:
+          longLabels ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
+      children: [
+        control,
+        const SizedBox(height: 6),
+        Tooltip(
+          message: 'Tap to change between NC and OFI',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => _changeFindingType(index),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isOfi ? 'OFI' : 'NC',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, size: 16, color: color),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
