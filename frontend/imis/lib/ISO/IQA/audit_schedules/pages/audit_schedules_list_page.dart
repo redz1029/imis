@@ -113,23 +113,32 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
           .where((s) => IqaPeriod.matches(_range, s.startDate, s.endDate))
           .toList();
 
+  /// One row per audit plan: an audit plan of 2026 has one "Audit Schedule
+  /// 2026" holding the schedule of every office it audits. The rows keep the
+  /// order of the plans.
+  List<_PlanGroup> get _groups {
+    final byPlan = <int, List<AuditSchedules>>{};
+    for (final s in _inRange) {
+      byPlan.putIfAbsent(s.auditPlanId, () => <AuditSchedules>[]).add(s);
+    }
+    return [
+      for (final e in byPlan.entries) _PlanGroup(e.key, e.value),
+    ];
+  }
+
   int _countFor(String tab) {
-    final schedules = _inRange;
-    if (tab == IqaStatus.all) return schedules.length;
-    return schedules
-        .where((s) => s.effectiveStatusName == tab)
-        .length;
+    final groups = _groups;
+    if (tab == IqaStatus.all) return groups.length;
+    return groups.where((g) => g.status == tab).length;
   }
 
-  List<AuditSchedules> get _filtered {
-    final schedules = _inRange;
-    if (_selectedTab == IqaStatus.all) return schedules;
-    return schedules
-        .where((s) => s.effectiveStatusName == _selectedTab)
-        .toList();
+  List<_PlanGroup> get _filtered {
+    final groups = _groups;
+    if (_selectedTab == IqaStatus.all) return groups;
+    return groups.where((g) => g.status == _selectedTab).toList();
   }
 
-  List<AuditSchedules> get _paged {
+  List<_PlanGroup> get _paged {
     final filtered = _filtered;
     final start = (_currentPage - 1) * _pageSize;
     if (start >= filtered.length) return [];
@@ -169,20 +178,29 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
               schedule.teamId != null &&
               _myTeamIds.contains(schedule.teamId)));
 
-  Widget _submitButton(AuditSchedules schedule) {
+  /// The schedules of the plan the signed-in user may submit.
+  List<AuditSchedules> _submittable(_PlanGroup group) =>
+      group.schedules.where(_canSubmit).toList();
+
+  Widget _submitButton(_PlanGroup group) {
+    final count = _submittable(group).length;
     return IconButton(
-      tooltip: 'Submit for confirmation',
+      tooltip: count > 1
+          ? 'Submit your $count schedules for confirmation'
+          : 'Submit for confirmation',
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       icon: Icon(Icons.send_rounded, size: 16, color: primaryColor),
-      onPressed: _isLoading ? null : () => _submitSchedule(schedule),
+      onPressed: _isLoading ? null : () => _submitGroup(group),
     );
   }
 
-  Future<void> _submitSchedule(AuditSchedules schedule) async {
+  Future<void> _submitGroup(_PlanGroup group) async {
     try {
       final user = await AuthUtil.fetchLoggedUser();
-      await _service.submitAuditSchedule(schedule.id, userId: user?.id);
+      for (final schedule in _submittable(group)) {
+        await _service.submitAuditSchedule(schedule.id, userId: user?.id);
+      }
       if (!mounted) return;
       MotionToast.success(
         description: const Text('Submitted for confirmation'),
@@ -199,12 +217,12 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   /// Opens the read-only schedule viewer for the plan the schedule belongs
   /// to, in a modal dialog — same navigation style as
   /// AuditPlanListPage._openForm.
-  Future<void> _openSchedule(AuditSchedules schedule) async {
-    if (schedule.auditPlanId <= 0) return;
+  Future<void> _openSchedule(_PlanGroup group) async {
+    if (group.planId <= 0) return;
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AuditSchedulePage(auditPlanId: schedule.auditPlanId),
+      builder: (_) => AuditSchedulePage(auditPlanId: group.planId),
     );
     // A confirmation, rejection or reschedule decision may have been made in
     // the dialog; bring the rows and badges up to date without a spinner.
@@ -213,14 +231,20 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
 
   /// "Reschedule: awaiting Team Leader / Lead Auditor" under the status, for a
   /// schedule that has an open reschedule request.
-  Widget _rescheduleBadge(AuditSchedules schedule) {
-    final request = _openRequests[schedule.id];
-    if (request == null) return const SizedBox.shrink();
+  Widget _rescheduleBadge(_PlanGroup group) {
+    final requests = [
+      for (final s in group.schedules)
+        if (_openRequests[s.id] != null) _openRequests[s.id]!,
+    ];
+    if (requests.isEmpty) return const SizedBox.shrink();
+    final request = requests.first;
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Tooltip(
-        message: 'Requested ${DateFormat('MMM d, yyyy h:mm a').format(request.proposedStartDate)}'
-            '${(request.reason ?? '').isNotEmpty ? ' — ${request.reason}' : ''}',
+        message: requests.length > 1
+            ? '${requests.length} reschedule requests are open'
+            : 'Requested ${DateFormat('MMM d, yyyy h:mm a').format(request.proposedStartDate)}'
+                '${(request.reason ?? '').isNotEmpty ? ' — ${request.reason}' : ''}',
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
@@ -234,7 +258,9 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  request.badgeLabel,
+                  requests.length > 1
+                      ? 'Reschedule: ${requests.length} requests open'
+                      : request.badgeLabel,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
@@ -294,8 +320,8 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Schedule',
-              totalCount: _inRange.length,
-              itemLabel: 'schedule',
+              totalCount: _groups.length,
+              itemLabel: 'audit schedule',
               icon: Icons.calendar_month_outlined,
               actionButton: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _fetchSchedules,
@@ -367,7 +393,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
-                                'Office',
+                                'Offices',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -441,16 +467,15 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                 color: Colors.grey.withValues(alpha: 0.2),
                               ),
                               itemBuilder: (context, index) {
-                                final schedule = paged[index];
+                                final group = paged[index];
                                 final rowNumber =
                                     (_currentPage - 1) * _pageSize + index + 1;
                                 final dateRange =
-                                    '${DateFormat('MMM d, yyyy').format(schedule.startDate)} – '
-                                    '${DateFormat('MMM d, yyyy').format(schedule.endDate)}';
-                                final officeName =
-                                    schedule.officeName?.trim().isNotEmpty == true
-                                    ? schedule.officeName!.trim()
-                                    : 'Unspecified Office';
+                                    group.start == group.end
+                                    ? DateFormat('MMM d, yyyy').format(group.start)
+                                    : '${DateFormat('MMM d, yyyy').format(group.start)} – '
+                                        '${DateFormat('MMM d, yyyy').format(group.end)}';
+                                final officeName = group.officesLabel;
 
                                 if (!isMobile) {
                                   return Padding(
@@ -478,7 +503,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            iqaReference('Audit Schedule', schedule.startDate.year),
+                                            iqaReference('Audit Schedule', group.start.year),
                                           ),
                                         ),
                                         Expanded(
@@ -494,21 +519,33 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                _buildStatusChip(
-                                                  schedule.effectiveStatusName,
-                                                ),
-                                                _rescheduleBadge(schedule),
+                                                _buildStatusChip(group.status),
+                                                if (group.progress != null)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          top: 4,
+                                                        ),
+                                                    child: Text(
+                                                      group.progress!,
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: kMuted,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                _rescheduleBadge(group),
                                               ],
                                             ),
                                           ),
                                         ),
                                         SizedBox(
-                                          width: _canSubmit(schedule) ? 100 : 60,
+                                          width: _submittable(group).isNotEmpty ? 100 : 60,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (_canSubmit(schedule))
-                                                _submitButton(schedule),
+                                              if (_submittable(group).isNotEmpty)
+                                                _submitButton(group),
                                               IconButton(
                                                 tooltip: 'View Schedule',
                                                 padding: EdgeInsets.zero,
@@ -522,7 +559,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                                   size: 16,
                                                 ),
                                                 onPressed: () =>
-                                                    _openSchedule(schedule),
+                                                    _openSchedule(group),
                                               ),
                                             ],
                                           ),
@@ -554,7 +591,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              iqaReference('Audit Schedule', schedule.startDate.year),
+                                              iqaReference('Audit Schedule', group.start.year),
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey.shade600,
@@ -568,22 +605,28 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                               ),
                                             ),
                                             const SizedBox(height: 5),
-                                            _buildStatusChip(
-                                              schedule.effectiveStatusName,
-                                            ),
-                                            _rescheduleBadge(schedule),
+                                            _buildStatusChip(group.status),
+                                            if (group.progress != null)
+                                              Text(
+                                                group.progress!,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                            _rescheduleBadge(group),
                                           ],
                                         ),
                                       ),
-                                      if (_canSubmit(schedule))
-                                        _submitButton(schedule),
+                                      if (_submittable(group).isNotEmpty)
+                                        _submitButton(group),
                                       IconButton(
                                         tooltip: 'View Schedule',
                                         icon: Icon(
                                           Icons.visibility_outlined,
                                           color: Colors.grey.shade500,
                                         ),
-                                        onPressed: () => _openSchedule(schedule),
+                                        onPressed: () => _openSchedule(group),
                                       ),
                                     ],
                                   ),
@@ -622,5 +665,51 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
         ),
       ),
     );
+  }
+}
+
+/// The schedules of one audit plan: what a row of the list stands for.
+class _PlanGroup {
+  _PlanGroup(this.planId, this.schedules);
+
+  final int planId;
+  final List<AuditSchedules> schedules;
+
+  DateTime get start => schedules
+      .map((s) => s.startDate)
+      .reduce((a, b) => a.isBefore(b) ? a : b);
+
+  DateTime get end =>
+      schedules.map((s) => s.endDate).reduce((a, b) => a.isAfter(b) ? a : b);
+
+  int get _confirmed =>
+      schedules.where((s) => s.effectiveStatusName == 'Confirmed').length;
+
+  /// The status of the whole plan: it is Confirmed only when every office's
+  /// schedule is; a schedule that needs revision or was rejected shows first.
+  String get status {
+    bool any(String name) =>
+        schedules.any((s) => s.effectiveStatusName == name);
+    if (any('Revision Required')) return 'Revision Required';
+    if (any('Rejected')) return 'Rejected';
+    if (_confirmed == schedules.length) return 'Confirmed';
+    return 'Pending Confirmation';
+  }
+
+  /// "1 of 2 confirmed" while a plan with several schedules is half way.
+  String? get progress => schedules.length > 1 && status != 'Confirmed'
+      ? '$_confirmed of ${schedules.length} confirmed'
+      : null;
+
+  /// The offices the plan audits ("A, B +1 more").
+  String get officesLabel {
+    final names = <String>[];
+    for (final s in schedules) {
+      final name = s.officeName?.trim() ?? '';
+      if (name.isNotEmpty && !names.contains(name)) names.add(name);
+    }
+    if (names.isEmpty) return 'Unspecified Office';
+    if (names.length <= 2) return names.join(', ');
+    return '${names.take(2).join(', ')} +${names.length - 2} more';
   }
 }
