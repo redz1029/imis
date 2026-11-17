@@ -40,6 +40,9 @@ const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-09';
 
 const double _kMargin = 36;
+
+/// Width of the letterhead: the content width of the portrait A4 forms.
+const double _kLetterheadWidth = 523;
 const double _kBorderW = 0.8;
 const double _kFont = 9;
 const double _kHead = 8.5;
@@ -392,31 +395,40 @@ class _NcarMonitoringPdfBuilder {
               ),
             );
 
-    // The same letterhead as the other IQA forms.
-    return pw.SizedBox(
-      height: _kSealBox,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.Expanded(
-            child: pw.Align(alignment: pw.Alignment.centerRight, child: seal),
-          ),
-          pw.SizedBox(width: 2),
-          pw.Column(
-            mainAxisSize: pw.MainAxisSize.min,
-            mainAxisAlignment: pw.MainAxisAlignment.center,
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              _t('Republic of the Philippines', size: 10),
-              _t('Department of Health', size: 10),
-              _t('COTABATO REGIONAL AND MEDICAL CENTER', bold: true, size: 11),
-            ],
-          ),
-          pw.SizedBox(width: 8),
-          pw.Expanded(
-            child: pw.Align(alignment: pw.Alignment.centerRight, child: tuv),
-          ),
-        ],
+    // The same letterhead as the other IQA forms. The page is landscape, so the
+    // letterhead keeps the width it has on the portrait forms; spread over the
+    // whole page the TUV mark would sit far from the heading.
+    return pw.Center(
+      child: pw.SizedBox(
+        width: _kLetterheadWidth,
+        height: _kSealBox,
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Expanded(
+              child: pw.Align(alignment: pw.Alignment.centerRight, child: seal),
+            ),
+            pw.SizedBox(width: 2),
+            pw.Column(
+              mainAxisSize: pw.MainAxisSize.min,
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                _t('Republic of the Philippines', size: 10),
+                _t('Department of Health', size: 10),
+                _t(
+                  'COTABATO REGIONAL AND MEDICAL CENTER',
+                  bold: true,
+                  size: 11,
+                ),
+              ],
+            ),
+            pw.SizedBox(width: 8),
+            pw.Expanded(
+              child: pw.Align(alignment: pw.Alignment.centerRight, child: tuv),
+            ),
+          ],
+        ),
       ),
     );
   }
