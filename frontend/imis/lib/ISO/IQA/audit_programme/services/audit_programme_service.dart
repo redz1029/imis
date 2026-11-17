@@ -84,7 +84,7 @@ class AuditProgrammeService {
 
   /// Fetch all Offices for dropdown options
   Future<List<Office>> getOffices() async {
-    final url = ApiEndpoint().office;
+    final url = ApiEndpoint().allOffices;
     try {
       final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data != null) {
