@@ -109,6 +109,36 @@ class ProceduresService {
     }
   }
 
+  Future<Procedures> saveDraft(String userId, Procedures p) async {
+    final url = '${ApiEndpoint().policyAndProcedure}/draft';
+
+    final body = Map<String, dynamic>.from(p.toJson());
+    body['id'] = (p.id == null) ? 0 : p.id;
+    if ((p.rowVersion ?? '').isEmpty) body.remove('rowVersion');
+
+    try {
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        queryParameters: {'userId': userId},
+        data: body,
+      );
+
+      final code = response.statusCode ?? 0;
+      if (code < 200 || code >= 300) {
+        throw Exception('Failed to save draft. (status $code)');
+      }
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) return Procedures.fromJson(data);
+      return p;
+    } on DioException catch (e) {
+      throw Exception(
+        'Save failed (${e.response?.statusCode}): ${e.response?.data ?? e.message}',
+      );
+    }
+  }
+
   Future<void> submit(String userId, Procedures procedure) async {
     final url = '${ApiEndpoint().policyAndProcedure}/submit';
 
