@@ -55,16 +55,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             })
             .WithTags(_policyAndProcedureEndPoint)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Delete));
-
-            app.MapGet("/page", async (int page, int pageSize, IPolicyAndProcedureService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedPAP = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-                return Results.Ok(paginatedPAP);
-            })
-            .WithTags(_policyAndProcedureEndPoint)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));
-
+        
             app.MapGet("/filter", async ([AsParameters] PolicyAndProcedureFilter filter, string roleId,
                 IPolicyAndProcedureService service, CancellationToken cancellationToken) =>
             {
