@@ -124,8 +124,17 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 var isNext = mine.Any(s => s.IsNextStatus && s.Status == PolicyAndProcedureStatus.Pending);
 
                 var allSignatoriesCompleted = all.Count > 0 && all.All(s => s.Status == PolicyAndProcedureStatus.Prepared);
+             
+                var firstTwoSignatoryIds = all
+                    .OrderBy(s => s.OrderLevel)
+                    .ThenBy(s => s.Id)
+                    .Take(2)
+                    .Select(s => s.SignatoryId)
+                    .ToList();
 
-                var canViewCompletedAsSignatory = isSignatory && allSignatoriesCompleted;
+                var canViewCompletedAsSignatory = isSignatory
+                    && allSignatoriesCompleted
+                    && firstTwoSignatoryIds.Contains(uid);
 
                 var canViewAsParent = isPgsServiceHead && (pap.Section?.ParentOffice?.UserOffices?.Any(u => u.UserId == uid && u.IsActive && !u.IsDeleted) ?? false);
 
@@ -199,7 +208,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             var entity = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? await BuildDtoAsync(entity, cancellationToken) : null;
         }
-     
+
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -227,7 +236,6 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         }
 
         // ================= DRAFT =================
-
         public async Task<PolicyAndProcedureDto> DraftAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -239,13 +247,13 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             EnsureHistoryLog(pap);
             EnsureDCRRF(pap);
+
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
             return await BuildDtoAsync(await ReloadAsync(pap.Id, cancellationToken), cancellationToken);
         }
 
         // ================= SUBMIT =================
-
         public async Task<PolicyAndProcedureDto> SubmitAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -309,7 +317,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         private async Task<PolicyAndProcedure> ReloadAsync(long id, CancellationToken ct)
             => await _repository.GetWithIncludesAsync(id, ct)
                ?? throw new InvalidOperationException("Policy and Procedure record not found.");
-      
+        
         private PolicyAndProcedureHistoryLog EnsureHistoryLog(PolicyAndProcedure pap)
         {
             pap.HistoryLogs ??= new List<PolicyAndProcedureHistoryLog>();
@@ -332,12 +340,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             return header;
         }
-
-        /// <summary>
-        /// Makes sure the PAP has ONE DCRRF row (only PolicyAndProcedureId is set, the rest stays null).
-        /// If one already exists, nothing is inserted or changed.
-        /// Call this BEFORE SaveChangesAsync.
-        /// </summary>
+     
         private PolicyAndProcedureDCRRF EnsureDCRRF(PolicyAndProcedure pap)
         {
             pap.DCRRFs ??= new List<PolicyAndProcedureDCRRF>();
@@ -513,7 +516,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     Id = s.Id,
                     PAPId = pap.Id,
                     PAPSignatoryTemplateId = s.PAPSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId, 
+                    SignatoryId = s.SignatoryId,
                     SignatoryName = FullName(s.SignatoryId),
                     Label = label,
                     OrderLevel = order,
