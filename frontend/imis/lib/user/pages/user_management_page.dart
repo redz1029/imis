@@ -1,9 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/utils/string_extension.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -45,6 +49,14 @@ class _UserManagementPageState extends State<UserManagementPage>
   bool _pendingLoading = false;
   final TextEditingController _pendingSearchCtrl = TextEditingController();
 
+  // Server-side search state
+  Timer? _activeDebounce;
+  Timer? _pendingDebounce;
+  String _activeQuery = '';
+  String _pendingQuery = '';
+  int _activeReq = 0;
+  int _pendingReq = 0;
+
   final int _pageSize = 15;
 
   final TextEditingController firstNameController = TextEditingController();
@@ -72,6 +84,8 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   @override
   void dispose() {
+    _activeDebounce?.cancel();
+    _pendingDebounce?.cancel();
     _tabController.dispose();
     _activeSearchCtrl.dispose();
     _pendingSearchCtrl.dispose();
@@ -88,100 +102,197 @@ class _UserManagementPageState extends State<UserManagementPage>
     super.dispose();
   }
 
-  Future<void> _fetchActive({int? page}) async {
-    if (_activeLoading) return;
-    setState(() => _activeLoading = true);
-    final targetPage = page ?? _activePage;
-    try {
-      final result = await _lockoutService.getActiveUsers(
-        page: targetPage,
+  List<PendingApprovalUser> _allActive = [];
+  List<PendingApprovalUser> _allPending = [];
+  bool _allActiveLoaded = false;
+  bool _allPendingLoaded = false;
+
+  final _paginationUtils = PaginationUtil(Dio());
+  late final FilterSearchResultUtil<UserRegistration> _userSearchUtil =
+      FilterSearchResultUtil<UserRegistration>(
+        paginationUtils: _paginationUtils,
+        endpoint: ApiEndpoint().getUser,
         pageSize: _pageSize,
+        fromJson: (json) => UserRegistration.fromJson(json),
       );
-      if (!mounted) return;
-      setState(() {
-        _activePage = result.page;
-        _activeTotal = result.totalCount;
-        _activeList =
-            result.items
-                .where((u) => !u.lockoutEnabled && !u.isPendingApproval)
-                .toList();
-        _filteredActiveList = List.from(_activeList);
+
+  bool _matches(PendingApprovalUser u, String q) {
+    final hay = '${u.fullName} ${u.userName} ${u.position}'.toLowerCase();
+    return q
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .every(hay.contains);
+  }
+
+  Future<Set<String>> _searchKeys(String query) async {
+    try {
+      final results = await _userSearchUtil.filter(query, (user, search) {
+        final tokens = search
+            .toLowerCase()
+            .split(RegExp(r'\s+'))
+            .where((t) => t.isNotEmpty);
+        final hay =
+            '${user.firstName ?? ''} ${user.middleName ?? ''} '
+                    '${user.lastName ?? ''} ${user.userName ?? ''}'
+                .toLowerCase();
+        return tokens.every(hay.contains);
       });
+      return {
+        for (final u in results) ...[
+          'id:${u.id}',
+          'un:${(u.userName ?? '').toLowerCase()}',
+        ],
+      };
+    } catch (e) {
+      debugPrint('search keys failed: $e');
+      return {};
+    }
+  }
+
+  bool _inKeys(PendingApprovalUser u, Set<String> keys) =>
+      keys.contains('id:${u.id}') ||
+      keys.contains('un:${u.userName.toLowerCase()}');
+
+  Future<List<PendingApprovalUser>> _loadAll(
+    Future<dynamic> Function(int page, int size) fetch,
+  ) async {
+    final out = <PendingApprovalUser>[];
+    int page = 1;
+    int total = 0;
+    do {
+      final r = await fetch(page, 100);
+      final items = (r.items as List).cast<PendingApprovalUser>();
+      out.addAll(items);
+      total = r.totalCount as int;
+      if (items.isEmpty) break;
+      page++;
+    } while (out.length < total);
+    return out;
+  }
+
+  Future<void> _fetchActive({int? page}) async {
+    final req = ++_activeReq;
+    setState(() => _activeLoading = true);
+    final searching = _activeQuery.isNotEmpty;
+    try {
+      if (searching) {
+        if (!_allActiveLoaded) {
+          final all = await _loadAll(
+            (p, s) => _lockoutService.getActiveUsers(page: p, pageSize: s),
+          );
+          _allActive =
+              all
+                  .where((u) => !u.lockoutEnabled && !u.isPendingApproval)
+                  .toList();
+          _allActiveLoaded = true;
+        }
+        final keys = await _searchKeys(_activeQuery);
+        if (!mounted || req != _activeReq) return;
+        setState(() {
+          _activePage = 1;
+          _activeList = _allActive;
+          _filteredActiveList =
+              _allActive
+                  .where((u) => _inKeys(u, keys) || _matches(u, _activeQuery))
+                  .toList();
+          _activeTotal = _filteredActiveList.length;
+        });
+      } else {
+        final result = await _lockoutService.getActiveUsers(
+          page: page ?? _activePage,
+          pageSize: _pageSize,
+        );
+        if (!mounted || req != _activeReq) return;
+        setState(() {
+          _activePage = result.page;
+          _activeList =
+              result.items
+                  .where((u) => !u.lockoutEnabled && !u.isPendingApproval)
+                  .toList();
+          _filteredActiveList = List.from(_activeList);
+          _activeTotal = result.totalCount;
+        });
+      }
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) setState(() => _activeLoading = false);
+      if (mounted && req == _activeReq) setState(() => _activeLoading = false);
     }
   }
 
   Future<void> _fetchPending({int? page}) async {
-    if (_pendingLoading) return;
+    final req = ++_pendingReq;
     setState(() => _pendingLoading = true);
-    final targetPage = page ?? _pendingPage;
+    final searching = _pendingQuery.isNotEmpty;
     try {
-      final result = await _lockoutService.getPendingApprovalUsers(
-        page: targetPage,
-        pageSize: _pageSize,
-      );
-      if (!mounted) return;
-      setState(() {
-        _pendingPage = result.page;
-        _pendingTotal = result.totalCount;
-        _pendingList = result.items;
-        _filteredPendingList = List.from(_pendingList);
-      });
+      if (searching) {
+        if (!_allPendingLoaded) {
+          _allPending = await _loadAll(
+            (p, s) =>
+                _lockoutService.getPendingApprovalUsers(page: p, pageSize: s),
+          );
+          _allPendingLoaded = true;
+        }
+        final keys = await _searchKeys(_pendingQuery);
+        if (!mounted || req != _pendingReq) return;
+        setState(() {
+          _pendingPage = 1;
+          _pendingList = _allPending;
+          _filteredPendingList =
+              _allPending
+                  .where((u) => _inKeys(u, keys) || _matches(u, _pendingQuery))
+                  .toList();
+          _pendingTotal = _filteredPendingList.length;
+        });
+      } else {
+        final result = await _lockoutService.getPendingApprovalUsers(
+          page: page ?? _pendingPage,
+          pageSize: _pageSize,
+        );
+        if (!mounted || req != _pendingReq) return;
+        setState(() {
+          _pendingPage = result.page;
+          _pendingList = result.items;
+          _filteredPendingList = List.from(_pendingList);
+          _pendingTotal = result.totalCount;
+        });
+      }
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) setState(() => _pendingLoading = false);
+      if (mounted && req == _pendingReq) {
+        setState(() => _pendingLoading = false);
+      }
     }
   }
 
   void _filterActive(String query) {
-    if (query.isEmpty) {
-      setState(() => _filteredActiveList = List.from(_activeList));
-      return;
-    }
-    final q = query.toLowerCase();
-    setState(() {
-      _filteredActiveList =
-          _activeList
-              .where(
-                (u) =>
-                    u.fullName.toLowerCase().contains(q) ||
-                    u.userName.toLowerCase().contains(q) ||
-                    u.position.toLowerCase().contains(q),
-              )
-              .toList();
+    _activeDebounce?.cancel();
+    _activeDebounce = Timer(const Duration(milliseconds: 300), () {
+      _activeQuery = query.trim();
+      _fetchActive(page: 1);
     });
   }
 
   void _filterPending(String query) {
-    if (query.isEmpty) {
-      setState(() => _filteredPendingList = List.from(_pendingList));
-      return;
-    }
-    final q = query.toLowerCase();
-    setState(() {
-      _filteredPendingList =
-          _pendingList
-              .where(
-                (u) =>
-                    u.fullName.toLowerCase().contains(q) ||
-                    u.userName.toLowerCase().contains(q) ||
-                    u.position.toLowerCase().contains(q),
-              )
-              .toList();
+    _pendingDebounce?.cancel();
+    _pendingDebounce = Timer(const Duration(milliseconds: 300), () {
+      _pendingQuery = query.trim();
+      _fetchPending(page: 1);
     });
   }
 
   Future<void> _refreshLists() async {
+    // may nagbago (lock/unlock/edit/delete) kaya i-reload ang cache
+    _allActiveLoaded = false;
+    _allPendingLoaded = false;
     await _fetchActive();
     await _fetchPending();
   }
 
   // ---------------------------------------------------------------------
-  // Lock / Unlock (unchanged logic from the original page)
+  // Lock / Unlock
   // ---------------------------------------------------------------------
 
   Future<void> _confirmUnlock(PendingApprovalUser user) async {
@@ -516,10 +627,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Edit / Create / Change Password  (merged in from UserProfilePage)
-  // ---------------------------------------------------------------------
-
   Future<bool> isUsernameExists(String username, [String? userId]) async {
     try {
       final userList = await _userProfileService.getUsers(
@@ -538,9 +645,6 @@ class _UserManagementPageState extends State<UserManagementPage>
     }
   }
 
-  /// The lockout list (PendingApprovalUser) doesn't carry every field the
-  /// edit/change-password forms need (email, names, prefix, etc.), so we
-  /// look the full record up by username before opening those dialogs.
   Future<UserRegistration?> _fetchFullProfileByUsername(String userName) async {
     try {
       final result = await _userProfileService.getUsers(
@@ -858,6 +962,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                                 '',
                                 '',
                                 null,
+                                true,
                               );
 
                               try {
@@ -1221,6 +1326,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                                   '',
                                   '',
                                   null,
+                                  true,
                                 );
 
                                 try {
@@ -1595,10 +1701,6 @@ class _UserManagementPageState extends State<UserManagementPage>
       ),
     );
   }
-
-  // ---------------------------------------------------------------------
-  // Avatar / status helpers (unchanged)
-  // ---------------------------------------------------------------------
 
   Widget _avatar(PendingApprovalUser user, {double size = 40}) {
     final initials =
@@ -2193,7 +2295,7 @@ class _UserManagementPageState extends State<UserManagementPage>
                                             statusLabelFor(user),
                                           ),
                                         ),
-                                        // FIX: Align (instead of a bare Expanded child) so the action
+                                        // Align (instead of a bare Expanded child) so the action
                                         // buttons keep their natural size and don't stretch/hover-highlight
                                         // across the whole column.
                                         Expanded(
@@ -2415,10 +2517,6 @@ class _ActionIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: give the button an explicit, small, fixed-size tap target
-    // (BoxConstraints.tightFor) instead of the previous unbounded
-    // `BoxConstraints()`, which let the button (and its hover/ink area)
-    // stretch to fill whatever width its parent handed it.
     return Tooltip(
       message: tooltip,
       child: SizedBox(

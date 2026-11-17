@@ -80,6 +80,7 @@ class CommonService {
     'Failed to fetch offices',
   );
 
+  //Fetch All Offices including service and office
   Future<List<Office>> fetchAlloffices() => _fetchList(
     ApiEndpoint().allOffices,
     (e) => Office.fromJson(e),

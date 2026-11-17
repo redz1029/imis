@@ -14,6 +14,7 @@ class Isat {
   PgsPeriod? isatPeriod;
   Office? office;
   String employeeUserId;
+  String employeeName;
   int officeId;
   String? immediateSupervisorUserId;
   String? position;
@@ -32,6 +33,7 @@ class Isat {
     this.id,
     this.isatPeriodId,
     this.employeeUserId,
+    this.employeeName,
     this.officeId,
     this.immediateSupervisorUserId,
     this.position,

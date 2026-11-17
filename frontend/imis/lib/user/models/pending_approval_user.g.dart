@@ -8,20 +8,21 @@ part of 'pending_approval_user.dart';
 
 PendingApprovalUser _$PendingApprovalUserFromJson(Map<String, dynamic> json) =>
     PendingApprovalUser(
-      id: json['id'] as String,
-      userName: json['userName'] as String,
-      email: json['email'] as String,
-      firstName: json['firstName'] as String,
-      middleName: json['middleName'] as String,
-      lastName: json['lastName'] as String,
-      position: json['position'] as String,
-      lockoutEnabled: json['lockoutEnabled'] as bool,
-      isLockedOut: json['isLockedOut'] as bool,
+      id: json['id'] as String? ?? '',
+      userName: json['userName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      firstName: json['firstName'] as String? ?? '',
+      middleName: json['middleName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
+      position: json['position'] as String? ?? '',
+      lockoutEnabled: json['lockoutEnabled'] as bool? ?? false,
+      isLockedOut: json['isLockedOut'] as bool? ?? false,
       lockoutEnd:
           json['lockoutEnd'] == null
               ? null
               : DateTime.parse(json['lockoutEnd'] as String),
-      isPendingApproval: json['isPendingApproval'] as bool,
+      office: json['office'] as String?,
+      isPendingApproval: json['isPendingApproval'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$PendingApprovalUserToJson(
@@ -37,5 +38,6 @@ Map<String, dynamic> _$PendingApprovalUserToJson(
   'lockoutEnabled': instance.lockoutEnabled,
   'isLockedOut': instance.isLockedOut,
   'lockoutEnd': instance.lockoutEnd?.toIso8601String(),
+  'office': instance.office,
   'isPendingApproval': instance.isPendingApproval,
 };

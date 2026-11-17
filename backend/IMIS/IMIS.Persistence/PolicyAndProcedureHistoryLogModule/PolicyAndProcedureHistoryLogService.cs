@@ -1,4 +1,5 @@
 ﻿using Base.Primitives;
+using IMIS.Application.PolicyAndProcedureDCRRFModule;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,11 @@ namespace IMIS.Persistence.PolicyAndProcedureHistoryLogModule
         {
             var entity = await _repository.GetByIdWithListAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? new PolicyAndProcedureHistoryLogDto(entity) : null;
+        }
+        public async Task<PolicyAndProcedureHistoryLogDCRRFDto?> GetByIdDCRRFAsync(long id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithListAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? new PolicyAndProcedureHistoryLogDCRRFDto(entity) : null;
         }
 
         public async Task<PolicyAndProcedureHistoryLogDto> SaveOrUpdateAsync(PolicyAndProcedureHistoryLogDto dto, CancellationToken cancellationToken)

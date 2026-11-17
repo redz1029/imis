@@ -2,7 +2,6 @@
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
-using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -248,6 +247,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             Content = form.Content,
             IsMasterCopy = form.IsMasterCopy,
             IsControlledCopy = form.IsControlledCopy,
+            IsReceived = form.IsReceived,
             MinutesAttachmentPath = attachmentPath
         };
     }

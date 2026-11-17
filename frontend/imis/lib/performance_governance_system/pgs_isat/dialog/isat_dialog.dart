@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -26,12 +28,17 @@ class IsatCommitmentRow {
   final TextEditingController statusCtrl;
   final TextEditingController accomplishmentCtrl;
 
+  int? id;
+  int? isatId;
+
   int? kraId;
   int? pgsDeliverableId;
   String contributionName;
   String? kraName;
 
   IsatCommitmentRow({
+    this.id,
+    this.isatId,
     String keyTask = '',
     String target = '',
     String timeline = '',
@@ -109,6 +116,8 @@ class _IsatDialogState extends State<IsatDialog> {
 
   final List<IsatCommitmentRow> _commitmentRows = [];
 
+  final List<IsatCommitmentRow> _removedRows = [];
+
   final _isatService = IsatServices(Dio());
   bool loadingEmployeeInfo = false;
   final _preparedByCtrl = TextEditingController();
@@ -133,6 +142,7 @@ class _IsatDialogState extends State<IsatDialog> {
   int? _serviceId;
   String? get _selectedYear => _selectedPeriod?.startDate.year.toString();
   int? _existingId;
+  DateTime? _existingCreatedDate;
   Map<String, dynamic>? _existing;
   bool _initialized = false;
   bool _isPending = false;
@@ -141,6 +151,8 @@ class _IsatDialogState extends State<IsatDialog> {
   bool get _canShowCommitments => _selectedPeriod != null && _officeId != null;
   List<IsatEmployeeOffice> _offices = [];
   bool _loadingOffices = false;
+  bool officesLoaded = false;
+  bool pgsDeliverablesLoaded = false;
 
   @override
   void initState() {
@@ -234,7 +246,10 @@ class _IsatDialogState extends State<IsatDialog> {
       });
       _loadDeliverablesFor(entry);
     }
-    setState(() => _selectedContributions.clear());
+    setState(() {
+      _selectedContributions.clear();
+      pgsDeliverablesLoaded = false;
+    });
     _loadPgsDeliverables();
   }
 
@@ -270,6 +285,12 @@ class _IsatDialogState extends State<IsatDialog> {
     _isApproved = !isDraft && hasSignatories && !hasNext;
 
     _existingId = v['id'] is int ? v['id'] as int : int.tryParse('${v['id']}');
+
+    _existingCreatedDate = DateTime.tryParse(
+      (v['dateCreated'] ?? v['createdDate'] ?? v['dateRecorded'] ?? '')
+          .toString(),
+    );
+
     _officeId = int.tryParse(v['officeId']?.toString() ?? '');
     _supervisorUserId = v['immediateSupervisorUserId']?.toString();
     _serviceId = int.tryParse(v['serviceId']?.toString() ?? '');
@@ -306,6 +327,8 @@ class _IsatDialogState extends State<IsatDialog> {
       for (final r in rows) {
         _commitmentRows.add(
           IsatCommitmentRow(
+            id: int.tryParse(r['id']?.toString() ?? ''), // FIX
+            isatId: int.tryParse(r['isatId']?.toString() ?? ''), // FIX
             keyTask: r['deliverable']?.toString() ?? '',
             target: r['target']?.toString() ?? '',
             timeline: r['timeLine']?.toString() ?? '',
@@ -350,8 +373,12 @@ class _IsatDialogState extends State<IsatDialog> {
 
   void _removeRow(int index) {
     setState(() {
-      _commitmentRows[index].dispose();
-      _commitmentRows.removeAt(index);
+      final removed = _commitmentRows.removeAt(index);
+      if (removed.id != null) {
+        _removedRows.add(removed);
+      } else {
+        removed.dispose();
+      }
       if (_commitmentRows.isEmpty) {
         _commitmentRows.add(IsatCommitmentRow());
       }
@@ -401,7 +428,10 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Future<void> _loadOffices() async {
     final uid = _employeeUserId;
-    if (uid == null || uid.isEmpty) return;
+    if (uid == null || uid.isEmpty) {
+      if (mounted) setState(() => officesLoaded = true);
+      return;
+    }
     setState(() => _loadingOffices = true);
     try {
       final offices = await _isatService.fetchEmployeeOffices(userId: uid);
@@ -411,8 +441,19 @@ class _IsatDialogState extends State<IsatDialog> {
         final match = offices.firstWhereOrNull((o) => o.id == _officeId);
         if (match != null) _departmentUnitCtrl.text = match.name;
       });
+    } catch (e) {
+      if (mounted) {
+        MotionToast.error(
+          description: Text('Failed to load offices: ${e.toString()}'),
+        ).show(context);
+      }
     } finally {
-      if (mounted) setState(() => _loadingOffices = false);
+      if (mounted) {
+        setState(() {
+          _loadingOffices = false;
+          officesLoaded = true;
+        });
+      }
     }
   }
 
@@ -426,7 +467,7 @@ class _IsatDialogState extends State<IsatDialog> {
       _serviceCtrl.text = o.parentOfficeName;
       _selectedContributions.clear();
       _pgsDeliverableOptions = [];
-      // clear napiling contribution sa rows kasi iba na ang office
+      pgsDeliverablesLoaded = false;
       for (final r in _commitmentRows) {
         r.kraId = null;
         r.pgsDeliverableId = null;
@@ -441,9 +482,13 @@ class _IsatDialogState extends State<IsatDialog> {
     if (_loadingOffices) {
       return const LinearProgressIndicator(minHeight: 2, color: primaryColor);
     }
-    // fallback kung walang nakuhang offices
     if (_offices.isEmpty) {
-      return _inputField(_departmentUnitCtrl, required: true, readOnly: true);
+      if (!officesLoaded) {
+        return _inputField(_departmentUnitCtrl, readOnly: true);
+      }
+      return _buildWarningBox(
+        'No office is assigned to you. Please contact the admin.',
+      );
     }
 
     final value = _offices.any((o) => o.id == _officeId) ? _officeId : null;
@@ -483,7 +528,10 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Future<void> _loadPgsDeliverables() async {
     if (_officeId == null || _selectedPeriod == null) return;
-    setState(() => _loadingPgsDeliverables = true);
+    setState(() {
+      _loadingPgsDeliverables = true;
+      pgsDeliverablesLoaded = false;
+    });
     try {
       final items = await _isatService.fetchPgsDeliverables(
         officeId: _officeId.toString(),
@@ -500,7 +548,12 @@ class _IsatDialogState extends State<IsatDialog> {
         ).show(context);
       }
     } finally {
-      if (mounted) setState(() => _loadingPgsDeliverables = false);
+      if (mounted) {
+        setState(() {
+          _loadingPgsDeliverables = false;
+          pgsDeliverablesLoaded = true;
+        });
+      }
     }
   }
 
@@ -650,6 +703,55 @@ class _IsatDialogState extends State<IsatDialog> {
     if (confirmed) await _saveIsat(isSubmit: !isDraft);
   }
 
+  Future<void> _confirmApproval() async {
+    final confirmed = await _showConfirmDialog(
+      title: 'Confirm ISAT',
+      message: 'Are you sure you want to confirm this record?',
+      confirmLabel: 'Confirm',
+      icon: Icons.verified_outlined,
+    );
+    if (!confirmed) return;
+
+    final id = _existingId;
+    if (id == null) {
+      MotionToast.error(
+        description: const Text('No existing ISAT to confirm.'),
+      ).show(context);
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      final user = await AuthUtil.fetchLoggedUser();
+      if (user == null || user.id == null) {
+        if (mounted) setState(() => _submitting = false);
+        return;
+      }
+
+      final success = await _isatService.confirmIsat(id, user.id!);
+
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      if (success) {
+        MotionToast.success(
+          description: const Text('ISAT confirmed.'),
+        ).show(context);
+        Navigator.pop(context, true);
+      } else {
+        MotionToast.error(
+          description: const Text('Failed to confirm ISAT. Please try again.'),
+        ).show(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        MotionToast.error(
+          description: Text('Error: ${e.toString()}'),
+        ).show(context);
+      }
+    }
+  }
+
   Widget _buildActionsDropdown(bool isMobile) {
     return PopupMenuButton<String>(
       enabled: !_submitting,
@@ -738,16 +840,7 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Widget _buildConfirmButton(bool isMobile) {
     return ElevatedButton.icon(
-      onPressed:
-          _submitting
-              ? null
-              : () => _confirmAndSave(
-                isDraft: false,
-                title: 'Confirm ISAT',
-                message: 'Are you sure you want to confirm this record?',
-                confirmLabel: 'Confirm',
-                icon: Icons.verified_outlined,
-              ),
+      onPressed: _submitting ? null : _confirmApproval, // FIX
       icon: const Icon(Icons.verified_outlined, size: 16, color: Colors.white),
       label: Text(
         'Confirm',
@@ -769,8 +862,27 @@ class _IsatDialogState extends State<IsatDialog> {
     );
   }
 
+  IsatAnnualPerformanceCommitments _toCommitment(
+    IsatCommitmentRow r, {
+    required bool isDeleted,
+  }) {
+    return IsatAnnualPerformanceCommitments(
+      r.id ?? 0,
+      r.isatId ?? _existingId ?? 0,
+      r.keyTaskCtrl.text.trim(),
+      r.targetCtrl.text.trim(),
+      r.accomplishmentCtrl.text.trim(),
+      isDeleted,
+      DateTime.now(),
+      kraId: r.kraId,
+      pgsDeliverableId: r.pgsDeliverableId,
+    );
+  }
+
   Future<void> _saveIsat({required bool isSubmit}) async {
     if (!_formKey.currentState!.validate()) return;
+    if (_offices.isEmpty) return;
+    if (_pgsDeliverableOptions.isEmpty && !_isLocked) return;
 
     if (_selectedPeriod == null ||
         _officeId == null ||
@@ -798,20 +910,15 @@ class _IsatDialogState extends State<IsatDialog> {
       final annualPerformanceCommitmentsList =
           _commitmentRows
               .where((r) => !r.isEmpty)
-              .map(
-                (r) => IsatAnnualPerformanceCommitments(
-                  0,
-                  0,
-                  r.keyTaskCtrl.text.trim(),
-                  r.targetCtrl.text.trim(),
-                  r.accomplishmentCtrl.text.trim(),
-                  false, // isDeleted
-                  DateTime.now(),
-                  kraId: r.kraId,
-                  pgsDeliverableId: r.pgsDeliverableId,
-                ),
-              )
+              .map((r) => _toCommitment(r, isDeleted: false))
               .toList();
+
+      final deletedCommitments = <IsatAnnualPerformanceCommitments>[
+        ..._removedRows.map((r) => _toCommitment(r, isDeleted: true)),
+        ..._commitmentRows
+            .where((r) => r.isEmpty && r.id != null)
+            .map((r) => _toCommitment(r, isDeleted: true)),
+      ];
 
       final signatoriesList = <IsatSignatory>[];
 
@@ -819,22 +926,30 @@ class _IsatDialogState extends State<IsatDialog> {
         _existingId ?? 0,
         _selectedPeriod!.id,
         _employeeUserId!,
+        '',
         _officeId!,
         _supervisorUserId,
         _positionCtrl.text.trim(),
         _serviceId!,
-        annualPerformanceCommitmentsList,
-        DateTime.now(),
+        [...annualPerformanceCommitmentsList, ...deletedCommitments],
+        _existingCreatedDate ?? DateTime.now(),
         !isSubmit,
         false,
         signatoriesList,
       );
-      final success =
-          isSubmit
-              ? await _isatService.submitIsat(isat, userId)
-              : (_existingId != null
-                  ? await _isatService.updateIsat(isat)
-                  : await _isatService.saveIsat(isat));
+
+      bool success;
+      if (_existingId != null) {
+        success = await _isatService.updateIsat(isat);
+        if (success && isSubmit) {
+          success = await _isatService.submitIsat(isat, userId);
+        }
+      } else {
+        success =
+            isSubmit
+                ? await _isatService.submitIsat(isat, userId)
+                : await _isatService.saveIsat(isat);
+      }
 
       if (mounted) {
         setState(() => _submitting = false);
@@ -871,6 +986,9 @@ class _IsatDialogState extends State<IsatDialog> {
     _serviceCtrl.dispose();
     _myContributionCtrl.dispose();
     for (final r in _commitmentRows) {
+      r.dispose();
+    }
+    for (final r in _removedRows) {
       r.dispose();
     }
     _preparedByCtrl.dispose();
@@ -1146,8 +1264,10 @@ class _IsatDialogState extends State<IsatDialog> {
   }
 
   Widget _buildFooter(bool isMobile) {
-    final showActions = _initialized && !_isLocked; // draft / new only
-    final showConfirm = _initialized && _isPending; // pending only
+    final hasBlocker =
+        _offices.isEmpty || (_pgsDeliverableOptions.isEmpty && !_isLocked);
+    final showActions = _initialized && !_isLocked && !hasBlocker;
+    final showConfirm = _initialized && _isPending;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1268,7 +1388,7 @@ class _IsatDialogState extends State<IsatDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Individual Strategic Alignment Tree (ISAT)',
+                          'Strategic Performance Alignment Matrix (SPAM)',
                           style: GoogleFonts.plusJakartaSans(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -1308,18 +1428,24 @@ class _IsatDialogState extends State<IsatDialog> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-
-                    // children: [
-                    //   _buildGeneralInfo(isMobile),
-                    //   _buildCommitmentsTable(isMobile),
-                    //   const SizedBox(height: 8),
-                    // ],
                     children: [
                       _buildGeneralInfo(isMobile),
-                      if (_canShowCommitments)
-                        _buildCommitmentsTable(isMobile)
+                      if (!_canShowCommitments)
+                        _buildCommitmentsPlaceholder()
+                      else if (_loadingPgsDeliverables)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 18),
+                          child: LinearProgressIndicator(
+                            minHeight: 2,
+                            color: primaryColor,
+                          ),
+                        )
+                      else if (pgsDeliverablesLoaded &&
+                          _pgsDeliverableOptions.isEmpty &&
+                          !_isLocked)
+                        _buildNoDeliverablesNotice()
                       else
-                        _buildCommitmentsPlaceholder(),
+                        _buildCommitmentsTable(isMobile),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -1329,6 +1455,49 @@ class _IsatDialogState extends State<IsatDialog> {
             _buildFooter(isMobile),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWarningBox(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        border: Border.all(color: const Color(0xFFFFCC80)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: Color(0xFFF57C00),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFE65100),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoDeliverablesNotice() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: _buildWarningBox(
+        'No deliverables available. The head of your office has not created deliverables yet.',
       ),
     );
   }

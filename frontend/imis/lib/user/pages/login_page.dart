@@ -206,24 +206,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _mobileLayout() {
-    return Stack(
-      children: [
-        _FormPanel(
-          emailController: _usernameController,
-          passwordController: _passwordController,
-          obscure: _obscure,
-          onToggleObscure: () => setState(() => _obscure = !_obscure),
-          isLoading: _isLoggingIn,
-          onLogin: _handleLogin,
-          mobile: true,
-        ),
-        const Positioned(
-          left: 16,
-          right: 16,
-          bottom: 12,
-          child: Center(child: _CopyrightText()),
-        ),
-      ],
+    return LayoutBuilder(
+      builder:
+          (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _FormPanel(
+                        emailController: _usernameController,
+                        passwordController: _passwordController,
+                        obscure: _obscure,
+                        onToggleObscure:
+                            () => setState(() => _obscure = !_obscure),
+                        isLoading: _isLoggingIn,
+                        onLogin: _handleLogin,
+                        mobile: true,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12, left: 16, right: 16),
+                      child: _CopyrightText(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
     );
   }
 }

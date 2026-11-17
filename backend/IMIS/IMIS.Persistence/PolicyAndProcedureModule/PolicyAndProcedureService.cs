@@ -3,7 +3,6 @@ using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
-using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Application.PolicyAndProcedureSignatoryModule;
 using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
@@ -239,7 +238,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 s.IsDeleted = true;
 
             EnsureHistoryLog(pap);
-
+            EnsureDCRRF(pap);
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
             return await BuildDtoAsync(await ReloadAsync(pap.Id, cancellationToken), cancellationToken);
@@ -298,6 +297,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             }
 
             EnsureHistoryLog(pap);
+            EnsureDCRRF(pap);
 
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
@@ -333,6 +333,34 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             return header;
         }
 
+        /// <summary>
+        /// Makes sure the PAP has ONE DCRRF row (only PolicyAndProcedureId is set, the rest stays null).
+        /// If one already exists, nothing is inserted or changed.
+        /// Call this BEFORE SaveChangesAsync.
+        /// </summary>
+        private PolicyAndProcedureDCRRF EnsureDCRRF(PolicyAndProcedure pap)
+        {
+            pap.DCRRFs ??= new List<PolicyAndProcedureDCRRF>();
+
+            var dcrrf = pap.DCRRFs
+                .Where(d => !d.IsDeleted)
+                .OrderByDescending(d => d.Id)
+                .FirstOrDefault();
+
+            if (dcrrf == null)
+            {
+                dcrrf = new PolicyAndProcedureDCRRF
+                {
+                    Id = 0,
+                    PolicyAndProcedureId = pap.Id
+                };
+
+                pap.DCRRFs.Add(dcrrf);
+            }
+
+            return dcrrf;
+        }
+
         private async Task<PolicyAndProcedure> SaveFieldsAsync(PolicyAndProcedureDto dto, CancellationToken ct)
         {
             var context = _repository.GetDbContext();
@@ -343,6 +371,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 pap = dto.ToEntity();
                 pap.PAPSignatories = new List<PolicyAndProcedureSignatory>();
                 pap.HistoryLogs = new List<PolicyAndProcedureHistoryLog>();
+                pap.DCRRFs = new List<PolicyAndProcedureDCRRF>();
                 context.Set<PolicyAndProcedure>().Add(pap);
             }
             else
@@ -360,6 +389,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 pap.Content = dto.Content;
                 pap.IsMasterCopy = dto.IsMasterCopy;
                 pap.IsControlledCopy = dto.IsControlledCopy;
+                pap.IsReceived = dto.IsReceived;
                 pap.MinutesAttachmentPath = dto.MinutesAttachmentPath;
             }
 
@@ -483,7 +513,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     Id = s.Id,
                     PAPId = pap.Id,
                     PAPSignatoryTemplateId = s.PAPSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId,
+                    SignatoryId = s.SignatoryId, 
                     SignatoryName = FullName(s.SignatoryId),
                     Label = label,
                     OrderLevel = order,

@@ -12,14 +12,14 @@ namespace IMIS.Persistence.PolicyAndProcedureHistoryLogModule
         {
         }
 
-        public async Task<PolicyAndProcedureHistoryLog?> GetByIdWithListAsync(long id, CancellationToken cancellationToken)
-        {
+        public async Task<PolicyAndProcedureHistoryLog?> GetByIdWithListAsync(long policyAndProcedureId, CancellationToken cancellationToken)
+        {           
             return await ReadOnlyDbContext.Set<PolicyAndProcedureHistoryLog>()
-                .AsNoTracking()
-                .Include(x => x.PolicyAndProcedure)
-                .Include(x => x.HistoryLogLists.Where(l => !l.IsDeleted))
-                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken)
-                .ConfigureAwait(false);
+            .AsNoTracking()
+            .Include(x => x.PolicyAndProcedure)
+            .Include(x => x.HistoryLogLists.Where(l => !l.IsDeleted))
+            .FirstOrDefaultAsync(x => x.PolicyAndProcedureId == policyAndProcedureId && !x.IsDeleted, cancellationToken)
+            .ConfigureAwait(false);
         }
     }
 }

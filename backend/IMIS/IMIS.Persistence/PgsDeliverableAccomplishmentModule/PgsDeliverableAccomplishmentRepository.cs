@@ -98,7 +98,7 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
 
                 PgsDeliverableAccomplishmenItem = rows
                     .Select(r => new PgsDeliverableAccomplishmenItemDto
-                    {
+                    { 
                         PgsDeliverableId = r.Id,
                         DeliverableName = r.DeliverableName,
 

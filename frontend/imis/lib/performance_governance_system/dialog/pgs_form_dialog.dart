@@ -21,6 +21,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/performance_governance_system/pgs_roadmap/services/roadmap_service.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/auto_complete_field.dart';
@@ -31,6 +32,7 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/auth_util.dart';
+import '../../utils/http_util.dart';
 
 const int _fHandle = 2;
 const int _fNo = 2;
@@ -106,6 +108,8 @@ class _PgsFormDialogState extends State<PgsFormDialog>
   final Map<int, String> _selectedKRAText = {};
   List<Map<String, dynamic>> _options = [];
   bool _processLoading = false;
+  final Map<int, int> _attachmentCountCache = {};
+  final _dio = Dio();
   bool _submitting = false;
   final _formKey = GlobalKey<FormState>();
   final Set<int> _isRetrievedData = {};
@@ -2425,10 +2429,18 @@ class _PgsFormDialogState extends State<PgsFormDialog>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _outlineBtn(
-                    Icons.bar_chart,
-                    'Accomplishment',
-                    onTap: () => _showAccomplishmentDialog(i),
+                  // _outlineBtn(
+                  //   Icons.bar_chart,
+                  //   'Accomplishment',
+                  //   onTap: () => _showAccomplishmentDialog(i),
+                  // ),
+                  _badgedButton(
+                    deliverableId: _deliverableIds[i] ?? 0,
+                    button: _outlineBtn(
+                      Icons.bar_chart,
+                      'Accomplishment',
+                      onTap: () => _showAccomplishmentDialog(i),
+                    ),
                   ),
                   gap6px,
                   _outlineBtn(
@@ -3004,11 +3016,21 @@ class _PgsFormDialogState extends State<PgsFormDialog>
             const SizedBox(height: 8),
             Row(
               children: [
+                // Expanded(
+                //   child: _outlineBtn(
+                //     Icons.bar_chart,
+                //     'Accomplishment',
+                //     onTap: () => _showAccomplishmentDialog(i),
+                //   ),
+                // ),
                 Expanded(
-                  child: _outlineBtn(
-                    Icons.bar_chart,
-                    'Accomplishment',
-                    onTap: () => _showAccomplishmentDialog(i),
+                  child: _badgedButton(
+                    deliverableId: _deliverableIds[i] ?? 0,
+                    button: _outlineBtn(
+                      Icons.bar_chart,
+                      'Accomplishment',
+                      onTap: () => _showAccomplishmentDialog(i),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -3260,461 +3282,114 @@ class _PgsFormDialogState extends State<PgsFormDialog>
     );
   }
 
+  Future<int> _getAttachmentCount(int deliverableId) async {
+    if (deliverableId == 0) return 0;
+    if (_attachmentCountCache.containsKey(deliverableId)) {
+      return _attachmentCountCache[deliverableId]!;
+    }
+    int count = 0;
+    try {
+      final url = '${ApiEndpoint.baseUrl}/$deliverableId/attachment-count';
+      final response = await AuthenticatedRequest.get(_dio, url);
+      if (response.statusCode == 200) {
+        count = response.data['attachmentCount'] ?? 0;
+      }
+    } catch (e) {
+      debugPrint('$e');
+    }
+    _attachmentCountCache[deliverableId] = count;
+    return count;
+  }
+
+  Widget _badgedButton({required Widget button, required int deliverableId}) {
+    return FutureBuilder<int>(
+      future: _getAttachmentCount(deliverableId),
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            button,
+            if (count > 0)
+              Positioned(
+                top: -6,
+                right: -4,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: kSuccess,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Widget _outlineBtn(IconData icon, String label, {VoidCallback? onTap}) =>
+  //     OutlinedButton.icon(
+  //       onPressed: onTap ?? () {},
+  //       icon: Icon(icon, size: 11, color: primaryColor),
+  //       label: Text(
+  //         label,
+  //         style: const TextStyle(
+  //           fontSize: 9,
+  //           color: primaryColor,
+  //           fontWeight: FontWeight.w700,
+  //         ),
+  //         overflow: TextOverflow.ellipsis,
+  //       ),
+  //       style: OutlinedButton.styleFrom(
+  //         side: const BorderSide(color: primaryColor),
+  //         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+  //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+  //         minimumSize: Size.zero,
+  //         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  //       ),
+  //     );
   Widget _outlineBtn(IconData icon, String label, {VoidCallback? onTap}) =>
-      OutlinedButton.icon(
-        onPressed: onTap ?? () {},
-        icon: Icon(icon, size: 11, color: primaryColor),
-        label: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 9,
-            color: primaryColor,
-            fontWeight: FontWeight.w700,
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onTap ?? () {},
+          icon: Icon(icon, size: 11, color: primaryColor),
+          label: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 9,
+              color: primaryColor,
+              fontWeight: FontWeight.w700,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: primaryColor),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: primaryColor),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
         ),
       );
-
-  // void _showAccomplishmentDialog(int index) async {
-  //   if (_selectedPeriodObject == null || _selectedPeriodObject!.isEmpty) {
-  //     MotionToast.warning(
-  //       description: const Text("Please select a period first."),
-  //       toastAlignment: Alignment.center,
-  //     ).show(context);
-  //     return;
-  //   }
-
-  //   final String? byWhen =
-  //       _rows[index].byWhen.isEmpty ? null : _rows[index].byWhen;
-  //   if (byWhen == null) {
-  //     MotionToast.warning(
-  //       description: const Text("Please set a 'By When' date first."),
-  //       toastAlignment: Alignment.center,
-  //     ).show(context);
-  //     return;
-  //   }
-
-  //   final int deliverableId = _deliverableIds[index] ?? 0;
-  //   if (deliverableId == 0) {
-  //     MotionToast.warning(
-  //       description: const Text(
-  //         "Please save the record first before adding accomplishments.",
-  //       ),
-  //       toastAlignment: Alignment.center,
-  //     ).show(context);
-  //     return;
-  //   }
-
-  //   final startDate = DateTime.parse(_selectedPeriodObject!['startDate']);
-  //   final endDate = DateTime.parse(_selectedPeriodObject!['endDate']);
-
-  //   final List<DateTime> startAndEndDates = [];
-  //   DateTime cursor = DateTime(startDate.year, startDate.month);
-  //   final endMonth = DateTime(endDate.year, endDate.month);
-  //   while (!cursor.isAfter(endMonth)) {
-  //     startAndEndDates.add(cursor);
-  //     cursor = DateTime(cursor.year, cursor.month + 1);
-  //   }
-
-  //   final int? kraId = _selectedKRA[index];
-  //   final String kraName =
-  //       _options.firstWhere(
-  //         (o) => o['id'] == kraId,
-  //         orElse: () => {'id': 0, 'name': 'Unknown'},
-  //       )['name'];
-
-  //   final String deliverableName = _delivCtrl[index]?.text ?? '';
-  //   final bool isDirect = _rows[index].isDirect;
-  //   final parsedByWhen = DateTime.parse(byWhen);
-  //   final String formattedByWhen = DateFormat('MMMM yyyy').format(parsedByWhen);
-  //   final formattedStart = DateFormat.yMMMMd().format(startDate);
-  //   final formattedEnd = DateFormat.yMMMMd().format(endDate);
-
-  //   final currentUser = await AuthUtil.fetchLoggedUser();
-  //   final String userId = currentUser?.id ?? '';
-
-  //   await showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (context) {
-  //       return Dialog(
-  //         backgroundColor: mainBgColor,
-  //         insetPadding: const EdgeInsets.all(20),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         child: ConstrainedBox(
-  //           constraints: const BoxConstraints(maxWidth: 1500),
-  //           child: Padding(
-  //             padding: const EdgeInsets.all(20),
-  //             child: Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Expanded(
-  //                   child: SingleChildScrollView(
-  //                     child: Column(
-  //                       crossAxisAlignment: CrossAxisAlignment.start,
-  //                       children: [
-  //                         Row(
-  //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                           children: [
-  //                             Expanded(
-  //                               child: Text(
-  //                                 "Accomplishment Form - $formattedStart to $formattedEnd",
-  //                                 style: const TextStyle(
-  //                                   fontSize: 18,
-  //                                   fontWeight: FontWeight.bold,
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                             IconButton(
-  //                               icon: const Icon(Icons.close),
-  //                               onPressed: () => Navigator.pop(context),
-  //                             ),
-  //                           ],
-  //                         ),
-  //                         const SizedBox(height: 16),
-  //                         Container(
-  //                           padding: const EdgeInsets.all(12),
-  //                           decoration: BoxDecoration(
-  //                             color: Colors.grey.shade100,
-  //                             borderRadius: BorderRadius.circular(8),
-  //                           ),
-  //                           child: Column(
-  //                             crossAxisAlignment: CrossAxisAlignment.start,
-  //                             children: [
-  //                               Row(
-  //                                 mainAxisAlignment:
-  //                                     MainAxisAlignment.spaceBetween,
-  //                                 children: [
-  //                                   Expanded(child: Text("KRA: $kraName")),
-  //                                   Text(
-  //                                     "Monthly Tracking Periods: ${startAndEndDates.length} month(s)",
-  //                                     style: const TextStyle(
-  //                                       fontWeight: FontWeight.bold,
-  //                                     ),
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                               const SizedBox(height: 4),
-  //                               Row(
-  //                                 mainAxisAlignment:
-  //                                     MainAxisAlignment.spaceBetween,
-  //                                 children: [
-  //                                   Expanded(
-  //                                     child: Text(
-  //                                       "Deliverable: $deliverableName",
-  //                                     ),
-  //                                   ),
-  //                                   Text("Due: $formattedByWhen"),
-  //                                 ],
-  //                               ),
-  //                               const SizedBox(height: 4),
-  //                               Text(
-  //                                 "Type: ${isDirect ? 'Direct' : 'Indirect'}",
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ),
-  //                         const SizedBox(height: 20),
-  //                         const Row(
-  //                           children: [
-  //                             Icon(Icons.bar_chart_outlined, size: 18),
-  //                             SizedBox(width: 8),
-  //                             Text(
-  //                               "Monthly Accomplishment Tracking",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ],
-  //                         ),
-  //                         const SizedBox(height: 12),
-  //                         Container(
-  //                           decoration: BoxDecoration(
-  //                             border: Border.all(color: Colors.black12),
-  //                             borderRadius: BorderRadius.circular(8),
-  //                           ),
-  //                           child: Column(
-  //                             children: [
-  //                               Container(
-  //                                 padding: const EdgeInsets.symmetric(
-  //                                   vertical: 8,
-  //                                   horizontal: 8,
-  //                                 ),
-  //                                 decoration: BoxDecoration(
-  //                                   color: Colors.grey.shade50,
-  //                                   borderRadius: const BorderRadius.only(
-  //                                     topLeft: Radius.circular(8),
-  //                                     topRight: Radius.circular(8),
-  //                                   ),
-  //                                 ),
-  //                                 child: const Row(
-  //                                   children: [
-  //                                     Expanded(
-  //                                       flex: 2,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Period",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Expanded(
-  //                                       flex: 2,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Status",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Expanded(
-  //                                       flex: 2,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Percent Accomplishment",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Expanded(
-  //                                       flex: 3,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Remarks (Department Head)",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Expanded(
-  //                                       flex: 2,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Proof",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Expanded(
-  //                                       flex: 3,
-  //                                       child: Center(
-  //                                         child: Text(
-  //                                           "Remarks (Evaluator)",
-  //                                           style: TextStyle(color: grey),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                   ],
-  //                                 ),
-  //                               ),
-  //                               const Divider(height: 1),
-  //                               AccomplishmentListView(
-  //                                 index: index,
-  //                                 startAndEndDates: startAndEndDates,
-  //                                 deliverableId: deliverableId,
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 const SizedBox(height: 20),
-  //                 PermissionWidget(
-  //                   permission: AppPermissions.addPgsDeliverableAccomplishment,
-  //                   child: Row(
-  //                     mainAxisAlignment: MainAxisAlignment.end,
-  //                     children: [
-  //                       TextButton(
-  //                         onPressed: () => Navigator.pop(context),
-  //                         child: const Text(
-  //                           "Cancel",
-  //                           style: TextStyle(color: primaryColor),
-  //                         ),
-  //                       ),
-  //                       const SizedBox(width: 12),
-  //                       ElevatedButton(
-  //                         style: ElevatedButton.styleFrom(
-  //                           backgroundColor: primaryColor,
-  //                           shape: RoundedRectangleBorder(
-  //                             borderRadius: BorderRadius.circular(4),
-  //                           ),
-  //                         ),
-
-  //                         onPressed: () async {
-  //                           final shouldSave = await showDialog<bool>(
-  //                             context: context,
-  //                             builder:
-  //                                 (ctx) => Dialog(
-  //                                   backgroundColor: Colors.transparent,
-  //                                   child: Container(
-  //                                     width: 380,
-  //                                     padding: const EdgeInsets.all(24),
-  //                                     decoration: BoxDecoration(
-  //                                       color: kSurface,
-  //                                       borderRadius: BorderRadius.circular(16),
-  //                                       boxShadow: [
-  //                                         BoxShadow(
-  //                                           color: Colors.black.withValues(
-  //                                             alpha: 0.12,
-  //                                           ),
-  //                                           blurRadius: 32,
-  //                                           offset: const Offset(0, 12),
-  //                                         ),
-  //                                       ],
-  //                                     ),
-  //                                     child: Column(
-  //                                       mainAxisSize: MainAxisSize.min,
-  //                                       children: [
-  //                                         Container(
-  //                                           width: 56,
-  //                                           height: 56,
-  //                                           decoration: BoxDecoration(
-  //                                             color: kPrimaryBg,
-  //                                             borderRadius:
-  //                                                 BorderRadius.circular(16),
-  //                                           ),
-  //                                           child: const Icon(
-  //                                             Icons.save_outlined,
-  //                                             color: primaryColor,
-  //                                             size: 28,
-  //                                           ),
-  //                                         ),
-  //                                         const SizedBox(height: 16),
-  //                                         Text(
-  //                                           'Confirm Save',
-  //                                           style: GoogleFonts.plusJakartaSans(
-  //                                             fontWeight: FontWeight.w700,
-  //                                             fontSize: 17,
-  //                                             color: kText,
-  //                                           ),
-  //                                         ),
-  //                                         const SizedBox(height: 8),
-  //                                         Text(
-  //                                           'Are you sure you want to save this accomplishment data?',
-  //                                           style: GoogleFonts.plusJakartaSans(
-  //                                             fontSize: 13,
-  //                                             color: kMuted,
-  //                                             height: 1.5,
-  //                                           ),
-  //                                           textAlign: TextAlign.center,
-  //                                         ),
-  //                                         const SizedBox(height: 24),
-  //                                         Row(
-  //                                           children: [
-  //                                             Expanded(
-  //                                               child: OutlinedButton(
-  //                                                 onPressed:
-  //                                                     () => Navigator.pop(
-  //                                                       ctx,
-  //                                                       false,
-  //                                                     ),
-  //                                                 style: OutlinedButton.styleFrom(
-  //                                                   side: const BorderSide(
-  //                                                     color: kBorder,
-  //                                                   ),
-  //                                                   padding:
-  //                                                       const EdgeInsets.symmetric(
-  //                                                         vertical: 12,
-  //                                                       ),
-  //                                                   shape: RoundedRectangleBorder(
-  //                                                     borderRadius:
-  //                                                         BorderRadius.circular(
-  //                                                           8,
-  //                                                         ),
-  //                                                   ),
-  //                                                 ),
-  //                                                 child: Text(
-  //                                                   'Cancel',
-  //                                                   style:
-  //                                                       GoogleFonts.plusJakartaSans(
-  //                                                         color: kMuted,
-  //                                                         fontWeight:
-  //                                                             FontWeight.w600,
-  //                                                       ),
-  //                                                 ),
-  //                                               ),
-  //                                             ),
-  //                                             const SizedBox(width: 10),
-  //                                             Expanded(
-  //                                               child: ElevatedButton.icon(
-  //                                                 onPressed:
-  //                                                     () => Navigator.pop(
-  //                                                       ctx,
-  //                                                       true,
-  //                                                     ),
-  //                                                 icon: const Icon(
-  //                                                   Icons.check_rounded,
-  //                                                   size: 16,
-  //                                                   color: Colors.white,
-  //                                                 ),
-  //                                                 label: Text(
-  //                                                   'Save',
-  //                                                   style:
-  //                                                       GoogleFonts.plusJakartaSans(
-  //                                                         color: Colors.white,
-  //                                                         fontWeight:
-  //                                                             FontWeight.w600,
-  //                                                       ),
-  //                                                 ),
-  //                                                 style: ElevatedButton.styleFrom(
-  //                                                   backgroundColor:
-  //                                                       primaryColor,
-  //                                                   elevation: 0,
-  //                                                   padding:
-  //                                                       const EdgeInsets.symmetric(
-  //                                                         vertical: 12,
-  //                                                       ),
-  //                                                   shape: RoundedRectangleBorder(
-  //                                                     borderRadius:
-  //                                                         BorderRadius.circular(
-  //                                                           8,
-  //                                                         ),
-  //                                                   ),
-  //                                                 ),
-  //                                               ),
-  //                                             ),
-  //                                           ],
-  //                                         ),
-  //                                       ],
-  //                                     ),
-  //                                   ),
-  //                                 ),
-  //                           );
-  //                           if (shouldSave != true) return;
-  //                           await saveAccomplishmentDataStandardUser(
-  //                             deliverableId,
-  //                             userId,
-  //                           );
-  //                           MotionToast.success(
-  //                             description: const Text('Saved Successfully'),
-  //                             toastAlignment: Alignment.topCenter,
-  //                           ).show(context);
-  //                           Navigator.of(context).pop(true);
-  //                         },
-  //                         child: const Text(
-  //                           "Save Accomplishment",
-  //                           style: TextStyle(color: Colors.white),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
   void _showAccomplishmentDialog(int index) async {
     if (_selectedPeriodObject == null || _selectedPeriodObject!.isEmpty) {
       MotionToast.warning(
@@ -3791,7 +3466,6 @@ class _PgsFormDialogState extends State<PgsFormDialog>
           ),
         );
 
-        // Mobile: label + value na naka-stack
         Widget infoRow(String label, String value, {bool bold = false}) =>
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -4163,6 +3837,8 @@ class _PgsFormDialogState extends State<PgsFormDialog>
         );
       },
     );
+    if (!mounted) return;
+    setState(() => _attachmentCountCache.remove(deliverableId));
   }
 
   void _showBreakthroughDialog(int index) async {

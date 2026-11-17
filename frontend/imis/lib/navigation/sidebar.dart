@@ -19,13 +19,6 @@ import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/ISO/IQA/notifications/models/iqa_notification.dart';
 import 'package:imis/ISO/IQA/notifications/services/iqa_notification_service.dart';
-// import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
-// import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
-// import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
-// import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
@@ -56,6 +49,8 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/qms_documents/pages/procedures_list_page.dart';
+// import 'package:imis/qms_documents/pages/procedures_list_page.dart';
+import 'package:imis/qms_documents/policy_signatory_template/pages/policy_signatory_template_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
@@ -115,16 +110,12 @@ class SidebarState extends State<Sidebar> {
   final GlobalKey _notificationKey = GlobalKey();
   List<Announcement> _unreadAnnouncements = [];
 
-  // IQA notifications (ISO): submissions waiting on the user, decisions,
-  // NCAR steps, ... They are asked for again every minute.
   final IqaNotificationService _iqaNotificationService = IqaNotificationService(
     Dio(),
   );
   List<IqaNotification> _iqaNotifications = [];
   int _iqaUnread = 0;
   Timer? _iqaTimer;
-  // Bumped when a notification opens, so the page it is about loads again
-  // (even if it is the page already showing) and shows the new item.
   int _iqaReload = 0;
   int selectedPage = 0;
   int selectedSubPage = 0;
@@ -452,8 +443,6 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
-  /// Asks the server for the user's IQA notifications. A failed refresh keeps
-  /// what the bell already shows.
   Future<void> _loadIqaNotifications() async {
     try {
       final result = await _iqaNotificationService.getNotifications();
@@ -465,8 +454,6 @@ class SidebarState extends State<Sidebar> {
     } catch (_) {}
   }
 
-  /// The permission that lets the user see an ISO sub-page (see the ISO group
-  /// of the menu), so a notification never opens a page the user cannot use.
   String? _iqaViewPermission(int subPage) {
     switch (subPage) {
       case 0:
@@ -485,7 +472,6 @@ class SidebarState extends State<Sidebar> {
     return null;
   }
 
-  /// Opens the ISO page a notification is about and marks it as read.
   Future<void> _openIqaNotification(IqaNotification n) async {
     if (!n.isRead) {
       setState(() {
@@ -509,7 +495,7 @@ class SidebarState extends State<Sidebar> {
     }
 
     setState(() {
-      selectedPage = 2; // ISO
+      selectedPage = 2;
       selectedSubPage = n.targetPage;
       _iqaReload++;
       _expandedKeys.add('g2');
@@ -616,7 +602,6 @@ class SidebarState extends State<Sidebar> {
   }
 
   Future<void> _showNotificationMenu(BuildContext context) async {
-    // Up to date when it opens, not up to a minute old.
     await _loadIqaNotifications();
     if (!mounted) return;
 
@@ -669,7 +654,9 @@ class SidebarState extends State<Sidebar> {
                               setMenuState(() {});
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
                               minimumSize: const Size(0, 28),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -708,17 +695,17 @@ class SidebarState extends State<Sidebar> {
                               ? (_iqaNotifications.isNotEmpty
                                   ? const SizedBox.shrink()
                                   : Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 24,
-                                ),
-                                child: Text(
-                                  'No new notifications.',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    color: kMuted,
-                                  ),
-                                ),
-                              ))
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 24,
+                                    ),
+                                    child: Text(
+                                      'No new notifications.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        color: kMuted,
+                                      ),
+                                    ),
+                                  ))
                               : ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: _unreadAnnouncements.length,
@@ -1419,12 +1406,24 @@ class SidebarState extends State<Sidebar> {
     }
 
     if (selectedPage == 2) {
-      if (selectedSubPage == 0) return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 1) return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 2) return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 3) return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 4) return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 5) return NcarListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 0) {
+        return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
+      }
+      if (selectedSubPage == 1) {
+        return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
+      }
+      if (selectedSubPage == 2) {
+        return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
+      }
+      if (selectedSubPage == 3) {
+        return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
+      }
+      if (selectedSubPage == 4) {
+        return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
+      }
+      if (selectedSubPage == 5) {
+        return NcarListPage(key: ValueKey('iqa$_iqaReload'));
+      }
       if (selectedSubPage == 6) return const ClauseLibraryPage();
       if (selectedSubPage == 7) return const IqaHistoryPage();
     }
@@ -1439,6 +1438,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 3) {
       if (selectedSubPage == 0) return const ProceduresListPage();
     }
+
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
@@ -1484,6 +1484,7 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 26) return const AuditStandardPage();
+      if (selectedSubPage == 27) return const PolicySignatoryTemplatePage();
     }
     return HomePage();
   }
@@ -1628,12 +1629,7 @@ class SidebarState extends State<Sidebar> {
         icon: Icons.fact_check_outlined,
         label: 'QMS Documents',
         pageIndex: 3,
-        children: const [
-          NavChild('Procedures', 0),
-          // NavChild('Auditor Offices', 1),
-          // NavChild('Auditor Team', 2),
-          // NavChild('ISO Announcements', 3),
-        ],
+        children: const [NavChild('Procedures', 0)],
       ),
       NavGroup(
         icon: Icons.settings_outlined,
@@ -1686,6 +1682,12 @@ class SidebarState extends State<Sidebar> {
             null,
             prefixTitle: false,
             children: [NavChild('SPAM Signatory Template', 24)],
+          ),
+          NavChild(
+            'QMS Modules',
+            null,
+            prefixTitle: false,
+            children: [NavChild('Policy and Procedure Template', 27)],
           ),
         ],
       ),

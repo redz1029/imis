@@ -85,7 +85,6 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .ConfigureAwait(false);
         }
 
-        // HistoryLogs + HistoryLogLists included here (tracked) because EnsureHistoryLog / SaveHistoryLogEntryAsync use this
         public async Task<PolicyAndProcedure?> GetWithIncludesAsync(long id, CancellationToken cancellationToken)
         {
             return await _entities
@@ -96,6 +95,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .Include(p => p.PAPSignatories)
                 .Include(p => p.HistoryLogs)
                     .ThenInclude(h => h.HistoryLogLists)
+                .Include(p => p.DCRRFs)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
