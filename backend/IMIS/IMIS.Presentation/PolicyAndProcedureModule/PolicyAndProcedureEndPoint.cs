@@ -24,25 +24,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {
-            app.MapPost("/", async ([FromForm] PolicyAndProcedureForm form, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (form == null)
-                    return Results.BadRequest("Form data is required.");
-
-                var (path, error) = await HandleAttachmentAsync(form, null, cancellationToken);
-                if (error != null) return error;
-
-                var dto = MapToDto(form, 0, path);
-
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
-                await cache.EvictByTagAsync(_policyAndProcedureEndPoint, cancellationToken);
-
-                return Results.Ok(dto);
-            })
-            .WithTags(_policyAndProcedureEndPoint)
-            .DisableAntiforgery()
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Add));
+        {            
 
             app.MapGet("/{id:long}", async (long id, IPolicyAndProcedureService service, CancellationToken cancellationToken) =>
             {
@@ -52,30 +34,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             .WithTags(_policyAndProcedureEndPoint)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));
-
-            app.MapPut("/{id:long}", async (long id, [FromForm] PolicyAndProcedureForm form, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (form == null)
-                    return Results.BadRequest("Form data is required.");
-
-                var existing = await service.GetByIdAsync(id, cancellationToken);
-                if (existing == null)
-                    return Results.NotFound($"Policy and Procedure with Id {id} not found.");
-
-                var (path, error) = await HandleAttachmentAsync(form, existing.MinutesAttachmentPath, cancellationToken);
-                if (error != null) return error;
-
-                var dto = MapToDto(form, id, path);
-
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
-                await cache.EvictByTagAsync(_policyAndProcedureEndPoint, cancellationToken);
-
-                return Results.Ok(dto);
-            })
-            .WithTags(_policyAndProcedureEndPoint)
-            .DisableAntiforgery()
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Edit));
-
+          
             app.MapPut("/submit", async ([FromBody] PolicyAndProcedureDto policyAndProcedureDto, string userId, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
              await RunWorkflowAsync(policyAndProcedureDto, userId, service, cache, submit: true, cancellationToken))
             .WithTags(_policyAndProcedureEndPoint)
@@ -96,16 +55,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             })
             .WithTags(_policyAndProcedureEndPoint)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Delete));
-
-            app.MapGet("/page", async (int page, int pageSize, IPolicyAndProcedureService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedPAP = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-                return Results.Ok(paginatedPAP);
-            })
-            .WithTags(_policyAndProcedureEndPoint)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));
-
+        
             app.MapGet("/filter", async ([AsParameters] PolicyAndProcedureFilter filter, string roleId,
                 IPolicyAndProcedureService service, CancellationToken cancellationToken) =>
             {
@@ -114,7 +64,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             })
             .WithTags(_policyAndProcedureEndPoint)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View))
-             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true);
 
             app.MapDelete("pgssignatory/{papid:long}", async (long papid, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
