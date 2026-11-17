@@ -152,13 +152,14 @@ using IMIS.Persistence.SWOTAnalysisServiceHeadModule;
 using IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using IMIS.Application.AuditeeModule;
 using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
 using IMIS.Persistence.PolicyAndProcedureSignatoryTemplateModule;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Persistence.PolicyAndProcedureHistoryLogModule;
+using IMIS.Application.PolicyAndProcedureDCRRFModule;
+using IMIS.Persistence.PolicyAndProcedureDCRRFModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -345,6 +346,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPolicyAndProcedureHistoryLogRepository, PolicyAndProcedureHistoryLogRepository>();
             services.AddScoped<IPolicyAndProcedureHistoryLogService, PolicyAndProcedureHistoryLogService>();
+
+            services.AddScoped<IPolicyAndProcedureDCRRFRepository, PolicyAndProcedureDCRRFRepository>();
+            services.AddScoped<IPolicyAndProcedureDCRRFService, PolicyAndProcedureDCRRFService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +11,7 @@ namespace IMIS.Presentation.PolicyAndProcedureHistoryLogModule
     public class PolicyAndProcedureHistoryLogEndPoints : CarterModule
     {
         private const string _policyAndProcedureHistoryLog = "Policy And Procedure History Log";
-
+        public readonly PolicyAndProcedureHistoryLogPermission _policyAndProcedureHistoryLogPermission = new();
         public PolicyAndProcedureHistoryLogEndPoints() : base("/PolicyAndProcedureHistoryLog") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -21,7 +22,8 @@ namespace IMIS.Presentation.PolicyAndProcedureHistoryLogModule
                 return result != null ? Results.Ok(result) : Results.NotFound();
             })
             .WithTags(_policyAndProcedureHistoryLog)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureHistoryLog), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureHistoryLog), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedureHistoryLogPermission.View));
 
             app.MapPost("/", async (PolicyAndProcedureHistoryLogDto dto, IPolicyAndProcedureHistoryLogService service, CancellationToken ct) =>
             {
@@ -35,7 +37,8 @@ namespace IMIS.Presentation.PolicyAndProcedureHistoryLogModule
                     return Results.NotFound(ex.Message);
                 }
             })
-            .WithTags(_policyAndProcedureHistoryLog);
+            .WithTags(_policyAndProcedureHistoryLog)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedureHistoryLogPermission.Add));
         }
     }
 }
