@@ -1,5 +1,7 @@
 ﻿using Carter;
 using IMIS.Application.PolicyAndProcedureDCRRFModule;
+using IMIS.Application.PolicyAndProcedureHistoryLogModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +37,14 @@ namespace IMIS.Presentation.PolicyAndProcedureDCRRFModule
                 return Results.Ok(policyAndProcedureDCRRFDto);
             })
            .WithTags(_policyAndProcedureDCRRF);
+
+            app.MapGet("history/{id:long}", async (long id, IPolicyAndProcedureHistoryLogService service, CancellationToken ct) =>
+            {
+                var result = await service.GetByIdDCRRFAsync(id, ct).ConfigureAwait(false);
+                return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+           .WithTags(_policyAndProcedureDCRRF)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureDCRRF), true);
         }
 
     }
