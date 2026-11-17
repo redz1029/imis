@@ -134,6 +134,7 @@ class _PrintData {
     required this.entries,
     required this.teamNames,
     required this.rosters,
+    this.leaders = const {},
     required this.signatories,
     required this.revision,
   });
@@ -144,6 +145,9 @@ class _PrintData {
   final int revision;
   final Map<int, String> teamNames;
   final Map<int, List<String>> rosters;
+
+  /// Names of the team leaders of each team; they are marked with * on the form.
+  final Map<int, Set<String>> leaders;
   final List<_Sig> signatories;
 }
 
@@ -410,6 +414,7 @@ Future<_PrintData> _loadPrintData(int planId) async {
   }
 
   final rosters = <int, List<String>>{};
+  final leaders = <int, Set<String>>{};
   try {
     final commonService = CommonService(Dio());
     final auditorTeams = await commonService.fetchAuditorTeam();
@@ -423,13 +428,21 @@ Future<_PrintData> _loadPrintData(int planId) async {
         if (!(team.isActive && auditor.isActive)) continue;
         final uid = auditor.userId;
         final name = uid == null ? null : nameByUserId[uid];
-        rosters
-            .putIfAbsent(team.teamId, () => <String>[])
-            .add(name ?? 'Unnamed Auditor');
+        final shown = name ?? 'Unnamed Auditor';
+        rosters.putIfAbsent(team.teamId, () => <String>[]).add(shown);
+        if (auditor.isTeamLeader) {
+          leaders.putIfAbsent(team.teamId, () => <String>{}).add(shown);
+        }
       }
     }
-    for (final list in rosters.values) {
-      list.sort();
+    // The team leader is listed first, the others alphabetically.
+    for (final entry in rosters.entries) {
+      final lead = leaders[entry.key] ?? const <String>{};
+      entry.value.sort((a, b) {
+        final la = lead.contains(a) ? 0 : 1;
+        final lb = lead.contains(b) ? 0 : 1;
+        return la != lb ? la.compareTo(lb) : a.compareTo(b);
+      });
     }
   } catch (e) {
     debugPrint('Print preview: failed to load auditor teams: $e');
@@ -585,6 +598,7 @@ Future<_PrintData> _loadPrintData(int planId) async {
     scope: scope,
     entries: finalEntries,
     teamNames: teamNames,
+    leaders: leaders,
     rosters: rosters,
     signatories: _buildSignatories(plan, _preparerOf(plan)),
     revision: revision,
@@ -954,8 +968,10 @@ class _PlanPdfBuilder {
       for (final l in _wrap(name, w, bold: true)) {
         lines.add(_CellLine(l, bold: true));
       }
+      final lead = data.leaders[e.teamId] ?? const <String>{};
       for (final p in persons) {
-        for (final l in _wrap(p, w)) {
+        // The team leader is marked with *.
+        for (final l in _wrap(lead.contains(p) ? '$p*' : p, w)) {
           lines.add(_CellLine(l));
         }
       }
