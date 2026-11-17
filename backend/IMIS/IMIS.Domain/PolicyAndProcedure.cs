@@ -19,5 +19,6 @@ namespace IMIS.Domain
         public bool? IsReceived { get; set; }
         public virtual ICollection<PolicyAndProcedureSignatory> PAPSignatories { get; set; } = new List<PolicyAndProcedureSignatory>();
         public virtual ICollection<PolicyAndProcedureHistoryLog> HistoryLogs { get; set; } = new List<PolicyAndProcedureHistoryLog>();
+        public virtual ICollection<PolicyAndProcedureDCRRF> DCRRFs { get; set; } = new List<PolicyAndProcedureDCRRF>();
     }
 }
