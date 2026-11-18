@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -154,10 +152,31 @@ class _IsatDialogState extends State<IsatDialog> {
   bool officesLoaded = false;
   bool pgsDeliverablesLoaded = false;
 
+  /// Kapag true, required ang lahat ng fields sa Annual Performance
+  /// Commitments (naka-on lang kapag Submit, hindi sa Draft).
+  bool _enforceRequired = false;
+
+  bool _commitmentsValid() => _commitmentRows.every(
+    (r) =>
+        r.pgsDeliverableId != null &&
+        r.keyTaskCtrl.text.trim().isNotEmpty &&
+        r.targetCtrl.text.trim().isNotEmpty &&
+        r.accomplishmentCtrl.text.trim().isNotEmpty,
+  );
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _initialized = widget.existing == null;
+  //   if (_commitmentRows.isEmpty) {
+  //     _commitmentRows.add(IsatCommitmentRow());
+  //   }
+  //   _initData();
+  // }
   @override
   void initState() {
     super.initState();
-    _initialized = widget.existing == null;
+    _initialized = false;
     if (_commitmentRows.isEmpty) {
       _commitmentRows.add(IsatCommitmentRow());
     }
@@ -690,6 +709,16 @@ class _IsatDialogState extends State<IsatDialog> {
     String? confirmLabel,
     IconData? icon,
   }) async {
+    // Required lang kapag Submit. Sa Draft, naka-off.
+    setState(() => _enforceRequired = !isDraft);
+    final formOk = _formKey.currentState!.validate();
+    if (!formOk || (!isDraft && !_commitmentsValid())) {
+      MotionToast.error(
+        description: const Text('Please fill in all required fields.'),
+      ).show(context);
+      return;
+    }
+
     final confirmed = await _showConfirmDialog(
       title: title ?? (isDraft ? 'Confirm Save as Draft' : 'Confirm Submit'),
       message:
@@ -883,6 +912,11 @@ class _IsatDialogState extends State<IsatDialog> {
     if (!_formKey.currentState!.validate()) return;
     if (_offices.isEmpty) return;
     if (_pgsDeliverableOptions.isEmpty && !_isLocked) return;
+
+    if (isSubmit && !_commitmentsValid()) {
+      setState(() => _enforceRequired = true);
+      return;
+    }
 
     if (_selectedPeriod == null ||
         _officeId == null ||
@@ -1246,6 +1280,8 @@ class _IsatDialogState extends State<IsatDialog> {
                   onRemove: () => _removeRow(i),
                   options: _pgsDeliverableOptions,
                   loadingOptions: _loadingPgsDeliverables,
+                  enforceRequired: () => _enforceRequired,
+                  showContributionError: _enforceRequired,
                   onContributionChanged:
                       (picked) => setState(() {
                         final r = _commitmentRows[i];
@@ -1419,38 +1455,47 @@ class _IsatDialogState extends State<IsatDialog> {
               ),
             ),
             Flexible(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 14 : 28,
-                    vertical: 12,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildGeneralInfo(isMobile),
-                      if (!_canShowCommitments)
-                        _buildCommitmentsPlaceholder()
-                      else if (_loadingPgsDeliverables)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 18),
-                          child: LinearProgressIndicator(
-                            minHeight: 2,
-                            color: primaryColor,
+              child:
+                  !_initialized
+                      ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 70),
+                        child: Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        ),
+                      )
+                      : Form(
+                        key: _formKey,
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 14 : 28,
+                            vertical: 12,
                           ),
-                        )
-                      else if (pgsDeliverablesLoaded &&
-                          _pgsDeliverableOptions.isEmpty &&
-                          !_isLocked)
-                        _buildNoDeliverablesNotice()
-                      else
-                        _buildCommitmentsTable(isMobile),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                ),
-              ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildGeneralInfo(isMobile),
+                              if (!_canShowCommitments)
+                                _buildCommitmentsPlaceholder()
+                              else if (_loadingPgsDeliverables)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 28),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                )
+                              else if (pgsDeliverablesLoaded &&
+                                  _pgsDeliverableOptions.isEmpty &&
+                                  !_isLocked)
+                                _buildNoDeliverablesNotice()
+                              else
+                                _buildCommitmentsTable(isMobile),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
+                        ),
+                      ),
             ),
             _buildFooter(isMobile),
           ],
@@ -1557,17 +1602,23 @@ class _CommitmentsTableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: Text('Strategic Contribution', style: headerStyle),
+            child: Text('Strategic Contribution *', style: headerStyle),
           ),
           gap,
           Expanded(
             flex: 3,
-            child: Text('Key Task / Deliverable', style: headerStyle),
+            child: Text('Key Task / Deliverable *', style: headerStyle),
           ),
           gap,
-          Expanded(flex: 2, child: Text('Target/Measure', style: headerStyle)),
+          Expanded(
+            flex: 2,
+            child: Text('Target/Measure *', style: headerStyle),
+          ),
           gap,
-          Expanded(flex: 2, child: Text('Accomplishment', style: headerStyle)),
+          Expanded(
+            flex: 2,
+            child: Text('Accomplishment *', style: headerStyle),
+          ),
           const SizedBox(width: 32),
         ],
       ),
@@ -1584,6 +1635,8 @@ class _CommitmentRow extends StatelessWidget {
   final List<IsatPgsDeliverables> options;
   final bool loadingOptions;
   final ValueChanged<IsatPgsDeliverables> onContributionChanged;
+  final bool Function() enforceRequired;
+  final bool showContributionError;
 
   const _CommitmentRow({
     super.key,
@@ -1595,11 +1648,14 @@ class _CommitmentRow extends StatelessWidget {
     required this.options,
     required this.loadingOptions,
     required this.onContributionChanged,
+    required this.enforceRequired,
+    required this.showContributionError,
   });
 
   InputDecoration _cellDeco(String hint) => InputDecoration(
     hintText: hint,
     hintStyle: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+    errorStyle: const TextStyle(fontSize: 9, height: 1),
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     filled: true,
@@ -1616,13 +1672,27 @@ class _CommitmentRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(5),
       borderSide: const BorderSide(color: primaryColor, width: 1.5),
     ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(5),
+      borderSide: const BorderSide(color: Colors.redAccent),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(5),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+    ),
   );
 
   Widget _cell(TextEditingController ctrl, String hint) => TextFormField(
     controller: ctrl,
     maxLines: null,
+    autovalidateMode: AutovalidateMode.onUserInteraction,
     style: GoogleFonts.plusJakartaSans(fontSize: 11),
     decoration: _cellDeco(hint),
+    validator:
+        (v) =>
+            enforceRequired() && (v == null || v.trim().isEmpty)
+                ? 'Required'
+                : null,
   );
 
   List<IsatPgsDeliverables> _entries() {
@@ -1749,6 +1819,7 @@ class _CommitmentRow extends StatelessWidget {
 
     final current = row.contributionName.trim();
     final kra = row.kraName;
+    final hasError = showContributionError && row.pgsDeliverableId == null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(5),
@@ -1757,6 +1828,7 @@ class _CommitmentRow extends StatelessWidget {
         decoration: _cellDeco('Select…').copyWith(
           suffixIcon: const Icon(Icons.arrow_drop_down, size: 20),
           suffixIconConstraints: const BoxConstraints(minWidth: 28),
+          errorText: hasError ? 'Required' : null,
         ),
         isEmpty: current.isEmpty,
         child:
