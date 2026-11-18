@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:imis/constant/constant.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -582,6 +583,8 @@ pw.Widget _row(_Placed p) {
 }
 
 pw.Widget _signatures(SwotPrintData d) {
+  final today = DateFormat('MMMM d, y').format(DateTime.now());
+
   pw.Widget block(String label, String name, String role) {
     return pw.Expanded(
       child: pw.Padding(
@@ -618,6 +621,10 @@ pw.Widget _signatures(SwotPrintData d) {
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
+            ),
+            pw.SizedBox(height: 3),
+            pw.Center(
+              child: pw.Text(today, style: const pw.TextStyle(fontSize: 9)),
             ),
           ],
         ),
