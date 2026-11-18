@@ -115,6 +115,7 @@ class ApiEndpoint {
   late String policyAndProcedure;
   late String papSignatoryTemplate;
   late String policyAndProcedureHistoryLog;
+  late String policyAndProcedureDCRRF;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -233,6 +234,7 @@ class ApiEndpoint {
     policyAndProcedure = '$baseUrl/PolicyAndProcedure';
     papSignatoryTemplate = '$baseUrl/papSignatoryTemplate';
     policyAndProcedureHistoryLog = '$baseUrl/PolicyAndProcedureHistoryLog';
+    policyAndProcedureDCRRF = '$baseUrl/PolicyAndProcedureDCRRF';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
