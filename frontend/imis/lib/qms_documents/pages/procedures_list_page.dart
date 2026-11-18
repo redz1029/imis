@@ -9,6 +9,8 @@ import 'package:imis/qms_documents/services/procedures_service.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/auth_util.dart';
 import 'procedures_page.dart';
 
 class ProceduresListPage extends StatefulWidget {
@@ -30,7 +32,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   int _currentPage = 1;
   String _query = '';
   Timer? _debounce;
-
+  String _roleId = '';
   bool _editing = false;
   Procedures? _editingProc;
   int _editorSeed = 0;
@@ -53,7 +55,26 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      _roleId = currentRole.id;
+    }
+
+    if (!mounted) return;
+    await _load();
   }
 
   @override
@@ -95,7 +116,8 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
       final result = await _service.getProceduresList(
         page: _currentPage,
         pageSize: _pageSize,
-        searchQuery: _query.trim().isEmpty ? null : _query.trim(),
+        search: _query.trim().isEmpty ? null : _query.trim(),
+        roleId: _roleId,
       );
       if (!mounted) return;
       setState(() {
@@ -343,7 +365,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Procedures Information',
+                      'Policy and Procedures Information',
                       style: TextStyle(
                         fontSize:
                             isXSmall

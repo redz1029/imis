@@ -5,11 +5,11 @@ import 'dart:math' as math;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/cupertino.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/performance_governance_system/pgs_isat/models/isat_employee_office.dart';
-import 'package:imis/performance_governance_system/pgs_isat/services/isat_services.dart';
 import 'package:imis/qms_documents/models/pap_history_log.dart';
 import 'package:imis/qms_documents/models/pap_signatory.dart';
 import 'package:imis/qms_documents/models/procedures.dart';
+import 'package:imis/qms_documents/pages/dcrrf_tab.dart';
+import 'package:imis/qms_documents/dcrrf/services/dcrrf_history_service.dart';
 import 'package:imis/qms_documents/services/pap_history_log_service.dart';
 import 'package:imis/qms_documents/services/procedures_service.dart';
 import 'package:imis/qms_documents/template/qms_template.dart';
@@ -73,7 +73,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   bool _saving = false;
   int _step = 0;
   final _papHistoryLog = PapHistoryLogService(Dio());
-  final _isatService = IsatServices(Dio());
+  final _dcrrfKey = GlobalKey<DcrrfTabState>();
+  final _dcrrfService = PapDcrrfService(Dio());
+  String _initiatorName = '';
 
   int _tab = 0;
 
@@ -91,7 +93,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   String? _previewUrl;
   String? _previewViewType;
   int _previewSeq = 0;
+  int _previewReq = 0;
   bool _previewLoading = false;
+  bool _editorReady = false;
 
   String? _latestHtml;
   String? _userId;
@@ -101,7 +105,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   List<PapSignatory> _signatories = [];
 
   int? _sectionId;
-  List<IsatEmployeeOffice> _offices = [];
+  List<_SectionOption> _offices = [];
   bool _loadingOffices = false;
   bool _officesLoaded = false;
 
@@ -109,8 +113,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   bool _historyLoading = false;
   bool _historyLoaded = false;
   String? _historyError;
-  bool _isDraft = true;
-  bool _statusChecked = false;
   List<_LogRow> _logRows = [];
   final List<_LogRow> _removedRows = [];
   bool _savingLog = false;
@@ -126,8 +128,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   List<int> get _visibleSteps =>
       _confirmOnly ? const [2] : List.generate(_steps.length, (i) => i);
-  // Usable print area ng isang page (96 dpi). A4 na may 1in margins.
-  // Baguhin kung iba ang @page size/margins ng qms_template.
   static const double _pageContentWidthPx = 602;
   static const double _pageContentHeightPx = 931;
   static const _headerKeys = [
@@ -236,6 +236,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Future<void> _captureEditor() async {
+    if (!_editorReady) {
+      return;
+    }
     try {
       final t = await _controller.getText();
       _latestHtml = t;
@@ -263,6 +266,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
     setState(() {
       _userId = user?.id;
+      _initiatorName = fullName;
       _canConfirm = canConfirm;
       _canDraft = canDraft;
       if (confirmOnly) _step = 2;
@@ -302,14 +306,21 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Future<void> _loadOffices() async {
-    final uid = _userId;
-    if (uid == null || uid.isEmpty) {
-      if (mounted) setState(() => _officesLoaded = true);
-      return;
-    }
     setState(() => _loadingOffices = true);
     try {
-      final offices = await _isatService.fetchEmployeeOffices(userId: uid);
+      final names = await AuthUtil.fetchOfficeNames();
+      final ids = await AuthUtil.fetchOfficeIds();
+
+      final offices = <_SectionOption>[];
+      if (names != null && ids != null) {
+        for (var i = 0; i < ids.length && i < names.length; i++) {
+          final isHead = await AuthUtil.getIsOfficeHead(ids[i]);
+          final id = int.tryParse(ids[i]);
+          if (isHead == true && id != null) {
+            offices.add(_SectionOption(id, names[i]));
+          }
+        }
+      }
       if (!mounted) return;
 
       final byId = _sectionId;
@@ -349,7 +360,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Future<String> _currentHtml() async {
-    if (_tab == 0 && _step == 1) await _captureEditor();
+    await _captureEditor(); // laging fresh mula sa editor
     return _latestHtml ?? widget.initialHtml ?? '';
   }
 
@@ -389,6 +400,16 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   Future<void> _save({bool close = false}) async {
     if (_saving) return;
+
+    if (_userId == null) {
+      MotionToast.error(
+        title: const Text('User Not Found'),
+        description: const Text('Please log in again.'),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
     if (!_headerValid()) {
       setState(() {
         _tab = 0;
@@ -612,11 +633,16 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
-  String _v(String key) => const HtmlEscape(
-    HtmlEscapeMode.element,
-  ).convert(_hdr[key]!.text.trim()).replaceAll('\n', '<br>');
+  Map<String, String> _localHeader() => {
+    for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
+  };
 
-  String _buildHeaderHtml() {
+  String _buildHeaderHtml([Map<String, String>? h]) {
+    h ??= _localHeader();
+    String v(String key) => const HtmlEscape(
+      HtmlEscapeMode.element,
+    ).convert((h![key] ?? '').trim()).replaceAll('\n', '<br>');
+
     final logo = Uri.base.resolve(_logoAssetUrl).toString();
     return '''
 <div class="hdr-top">
@@ -633,29 +659,26 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   </colgroup>
   <tr>
     <td class="logo" rowspan="5"><div class="logo-box"><img src="$logo" onerror="this.style.display='none'"></div></td>
-    <td rowspan="2">TITLE: <b>${_v('title')}</b></td>
-    <td>SECTION: <b>${_v('section')}</b></td>
+    <td rowspan="2">TITLE: <b>${v('title')}</b></td>
+    <td>SECTION: <b>${v('section')}</b></td>
   </tr>
   <tr>
-    <td>DOC. CODE: <b>${_v('docCode')}</b></td>
+    <td>DOC. CODE: <b>${v('docCode')}</b></td>
   </tr>
   <tr>
-    <td>PROCESS OWNER: <b>${_v('owner')}</b></td>
-    <td>REVISION: <b>${_v('revision')}</b></td>
+    <td>PROCESS OWNER: <b>${v('owner')}</b></td>
+    <td>REVISION: <b>${v('revision')}</b></td>
   </tr>
   <tr>
-    <td>REGULATORY/STANDARD REFERENCE(S): <b>${_v('reference')}</b></td>
-    <td>PAGES: <b>${_v('pages')}</b></td>
+    <td>REGULATORY/STANDARD REFERENCE(S): <b>${v('reference')}</b></td>
+    <td>PAGES: <b>${v('pages')}</b></td>
   </tr>
   <tr>
-    <td colspan="2">EFFECTIVITY DATE: <b>${_v('effectivity')}</b></td>
+    <td colspan="2">EFFECTIVITY DATE: <b>${v('effectivity')}</b></td>
   </tr>
 </table>''';
   }
 
-  /// Renders the document offscreen at exactly one page width and counts
-  /// how many pages its height spans. Walang js interop: ang loob ng iframe
-  /// ang nag-po-postMessage ng height. Returns null if measuring failed.
   Future<int?> _countPages(String fullHtml) async {
     final id = 'pp${DateTime.now().microsecondsSinceEpoch}';
     final probe =
@@ -715,7 +738,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
-  /// Auto-fills the "Pages" header value from the current editor content.
   Future<void> _refreshPages([String? body]) async {
     body ??= sanitize(await _currentHtml());
     final n = await _countPages(buildPreviewDocument(_buildHeaderHtml(), body));
@@ -724,11 +746,27 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Future<void> _loadPreview() async {
-    setState(() => _previewLoading = true);
+    final req = ++_previewReq;
+    setState(() {
+      _previewLoading = true;
+      _previewViewType = null;
+      _previewHtml = null;
+    });
     try {
-      final body = sanitize(await _currentHtml());
-      await _refreshPages(body); // set Pages before building the header
-      final fullHtml = buildPreviewDocument(_buildHeaderHtml(), body);
+      final (rawBody, hdr) = await _previewSource();
+      final body = sanitize(rawBody);
+
+      // bilangin ang pages mula sa parehong data
+      final n = await _countPages(
+        buildPreviewDocument(_buildHeaderHtml(hdr), body),
+      );
+      if (n != null) {
+        hdr['pages'] = n <= 1 ? '1' : '1-$n';
+        _hdr['pages']!.text = hdr['pages']!;
+      }
+      if (!mounted || req != _previewReq) return;
+
+      final fullHtml = buildPreviewDocument(_buildHeaderHtml(hdr), body);
       _previewHtml = fullHtml;
 
       const hideToolbar = '''
@@ -755,21 +793,49 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               ..style.border = 'none'
               ..style.width = '100%'
               ..style.height = '100%';
-        _previewFrame = frame;
         return frame;
       });
 
-      if (!mounted) return;
       setState(() => _previewViewType = viewType);
     } catch (e) {
       debugPrint('Preview failed: $e');
     } finally {
-      if (mounted) setState(() => _previewLoading = false);
+      if (mounted && req == _previewReq) {
+        setState(() => _previewLoading = false);
+      }
+    }
+  }
+
+  Future<(String, Map<String, String>)> _previewSource() async {
+    final local = _localHeader();
+    if (_id == null) return (await _currentHtml(), local);
+
+    try {
+      final p = await _service.getById(_id!);
+      final eff = p.effectiveDate;
+      final office = (p.officeName ?? '').trim();
+      final hdr = <String, String>{
+        'title': (p.title ?? '').trim(),
+        'section': office.isNotEmpty ? office : local['section']!,
+        'owner': (p.processOwner ?? '').trim(),
+        'docCode': (p.documentCode ?? '').trim(),
+        'revision': (p.revision ?? '').trim(),
+        'reference': (p.regulatoryStandard ?? '').trim(),
+        'pages': local['pages']!,
+        'effectivity':
+            (eff == null || eff.year < 2000)
+                ? ''
+                : DateFormat('MMMM d, y').format(eff.toLocal()),
+      };
+      return (p.content ?? '', hdr);
+    } catch (e) {
+      debugPrint('Preview fetch failed, using local data: $e');
+      return (await _currentHtml(), local);
     }
   }
 
   Future<void> _openPreview() async {
-    if (_previewHtml == null) await _loadPreview();
+    await _loadPreview(); // laging bagong build, walang cache
     if (_previewHtml == null) return;
     final blob = html.Blob([_previewHtml!], 'text/html');
     final url = html.Url.createObjectUrlFromBlob(blob);
@@ -794,8 +860,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       lastDate: DateTime(2100),
     );
     if (d == null) return;
-    _effectivityDate = d;
-    _hdr['effectivity']!.text = '${_months[d.month - 1]} ${d.day}, ${d.year}';
+    setState(() {
+      _effectivityDate = d;
+      _hdr['effectivity']!.text = '${_months[d.month - 1]} ${d.day}, ${d.year}';
+    });
   }
 
   bool _headerValid() => _formKey.currentState?.validate() ?? true;
@@ -805,8 +873,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     if (i == _step) return;
     if (i > _step && !_headerValid()) return;
     if (_step == 1) await _captureEditor();
-    if (i != 1 && i != 2)
-      await _refreshPages(); // step 2 = _loadPreview ang mag-refresh
+    if (i != 1 && i != 2) {
+      await _refreshPages();
+    }
     if (!mounted) return;
     setState(() => _step = i);
     if (i == 2) _loadPreview();
@@ -884,7 +953,8 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                         children: [
                           _buildPolicyBody(isSmall),
                           _buildHistoryTab(),
-                          for (int i = 2; i < _tabs.length; i++)
+                          _buildDcrrfTab(),
+                          for (int i = 3; i < _tabs.length; i++)
                             _buildPlaceholderTab(_tabs[i]),
                         ],
                       ),
@@ -899,10 +969,16 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     if (i == _tab) return;
     if (_tab == 1 && !await _confirmLeaveHistory()) return;
     if (_tab == 0 && _step == 1) await _captureEditor();
-    if (i == 1) await _refreshPages(); // auto Pages para sa History Log
+    if (i == 1) await _refreshPages();
     if (!mounted) return;
     setState(() => _tab = i);
     if (i == 1) _loadHistory();
+    if (i == 2) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _dcrrfKey.currentState?.reload(),
+      );
+    }
+    if (i == 0 && _step == 2) _loadPreview();
   }
 
   void _disposeLogRows() {
@@ -916,53 +992,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     _removedRows.clear();
   }
 
-  // Future<void> _loadHistory() async {
-  //   if (_id == null) {
-  //     setState(() {
-  //       _history = null;
-  //       _historyError = null;
-  //     });
-  //     return;
-  //   }
-  //   if (_historyLoaded) return;
-
-  //   setState(() {
-  //     _historyLoading = true;
-  //     _historyError = null;
-  //   });
-  //   try {
-  //     if (!_statusChecked) {
-  //       final p = await _service.getById(_id!);
-  //       _isDraft = p.isDraft ?? true;
-  //       _statusChecked = true;
-  //     }
-
-  //     // Draft pa lang: locked ang History Log, wag mag-load
-  //     if (_isDraft) return;
-
-  //     final h = await _papHistoryLog.getHistoryLog(_id!);
-  //     if (!mounted) return;
-  //     _disposeLogRows();
-  //     final rows = [
-  //       for (final l in h.policyAndProcedureLogList) _LogRow.fromModel(l),
-  //     ];
-  //     if (rows.isEmpty) {
-  //       rows.add(_LogRow()..page.text = _hdr['pages']!.text);
-  //     }
-  //     setState(() {
-  //       _history = h;
-  //       _logRows = rows;
-  //       _historyLoaded = true;
-  //       _logDirty = false;
-  //     });
-  //   } catch (e) {
-  //     debugPrint('History load failed: $e');
-  //     if (!mounted) return;
-  //     setState(() => _historyError = 'Failed to load history log');
-  //   } finally {
-  //     if (mounted) setState(() => _historyLoading = false);
-  //   }
-  // }
   Future<void> _loadHistory() async {
     if (_id == null) {
       setState(() {
@@ -1004,7 +1033,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   void _addLogRow() => setState(() {
     final r = _LogRow();
-    r.page.text = _hdr['pages']!.text; // auto-fill, hindi na i-type
+    r.page.text = _hdr['pages']!.text;
     _logRows.add(r);
     _logDirty = true;
   });
@@ -1013,7 +1042,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     setState(() {
       final r = _logRows.removeAt(i);
       if (r.source != null) {
-        _removedRows.add(r); // isasama sa save bilang isDeleted
+        _removedRows.add(r);
       } else {
         r.dispose();
       }
@@ -1129,7 +1158,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
         description: const Text('History log saved'),
         toastAlignment: Alignment.center,
       ).show(context);
-      await _loadHistory(); // para makuha ang bagong ids at rowVersion
+      await _loadHistory();
       return true;
     } catch (e) {
       if (!mounted) return false;
@@ -1144,7 +1173,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
-  /// true = pwede nang umalis
   Future<bool> _confirmLeaveHistory() async {
     _pruneEmptyRows();
     if (!_logDirty) return true;
@@ -1180,7 +1208,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
     if (choice == 'discard') {
       _logDirty = false;
-      _historyLoaded = false; // reload from server sa susunod
+      _historyLoaded = false;
       _removedRows.clear();
       return true;
     }
@@ -1349,7 +1377,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     ),
   );
 
-  Widget _buildHistoryLocked() {
+  Widget _buildHistoryLocked([String name = 'History Log']) {
     return _card(
       child: Center(
         child: Padding(
@@ -1360,17 +1388,17 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               Icon(Icons.lock_outline, size: 40, color: Colors.grey.shade400),
               const SizedBox(height: 12),
               Text(
-                'History Log is locked',
+                '$name is locked',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                "You can't use this form yet. Submit the document first to unlock the History Log.",
+              Text(
+                "You can't use this form yet. Save the document first to unlock the $name.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
@@ -1600,6 +1628,17 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDcrrfTab() {
+    if (_id == null) return _buildHistoryLocked('DCRRF');
+    return DcrrfTab(
+      key: _dcrrfKey,
+      procedureId: _id,
+      header: _localHeader,
+      initiatorName: _initiatorName,
+      service: _dcrrfService,
     );
   }
 
@@ -1935,7 +1974,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  html.IFrameElement? _previewFrame;
   Timer? _frameGuard;
 
   void _setFramePointer(bool blocked) {
@@ -2332,7 +2370,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
             return HtmlEditor(
               controller: _controller,
               callbacks: Callbacks(
-                onInit: _syncListMarkers,
+                onInit: () {
+                  _editorReady = true;
+                  _syncListMarkers();
+                },
                 onChangeContent: (s) {
                   if (s != null) _latestHtml = s;
                   _syncListMarkers();
@@ -2491,6 +2532,12 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       ),
     );
   }
+}
+
+class _SectionOption {
+  final int id;
+  final String name;
+  const _SectionOption(this.id, this.name);
 }
 
 class _LogRow {
