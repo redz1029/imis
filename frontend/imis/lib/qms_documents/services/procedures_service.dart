@@ -11,18 +11,55 @@ class ProceduresService {
 
   ProceduresService(this.dio);
 
+  // Future<PageList<Procedures>> getProceduresList({
+  //   int page = 1,
+  //   int pageSize = 15,
+  //   String? searchQuery,
+  //   String? sectionId,
+  //   String? fromDate,
+  //   String? toDate,
+  //    String? search,
+  //   required String roleId,
+  // }) async {
+  //   final paginationUtil = PaginationUtil(dio);
+
+  //   return await paginationUtil.fetchPaginatedData<Procedures>(
+  //     endpoint: '${ApiEndpoint().policyAndProcedure}/page',
+  //     page: page,
+  //     pageSize: pageSize,
+  //     searchQuery: searchQuery,
+  //      additionalParams: {
+  //       if (sectionId != null) 'sectionId': sectionId,
+  //       if (fromDate != null) 'fromDate': fromDate,
+  //       if (toDate != null) 'toDate': toDate,
+  //        if (search != null) 'sectionId': search,
+
+  //     },
+  //     fromJson: (json) => Procedures.fromJson(json),
+  //   );
+  // }
   Future<PageList<Procedures>> getProceduresList({
     int page = 1,
     int pageSize = 15,
-    String? searchQuery,
+    String? sectionId,
+    String? fromDate,
+    String? toDate,
+    String? search,
+    required String roleId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
 
     return await paginationUtil.fetchPaginatedData<Procedures>(
-      endpoint: '${ApiEndpoint().policyAndProcedure}/page',
+      endpoint: '${ApiEndpoint().policyAndProcedure}/filter',
       page: page,
       pageSize: pageSize,
-      searchQuery: searchQuery,
+      additionalParams: {
+        'roleId': roleId,
+        if (sectionId != null && sectionId.isNotEmpty) 'sectionId': sectionId,
+        if (fromDate != null && fromDate.isNotEmpty) 'fromDate': fromDate,
+        if (toDate != null && toDate.isNotEmpty) 'toDate': toDate,
+        if (search != null && search.isNotEmpty) 'search': search,
+      },
       fromJson: (json) => Procedures.fromJson(json),
     );
   }
