@@ -85,7 +85,7 @@ class OfficePageState extends State<OfficePage> {
     fetchOffices();
     officeSearchUtil = FilterSearchResultUtil<Office>(
       paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().office,
+      endpoint: ApiEndpoint().officewithInactive,
       pageSize: _pageSize,
       fromJson: (json) => Office.fromJson(json),
     );

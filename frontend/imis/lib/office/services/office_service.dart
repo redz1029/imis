@@ -18,7 +18,7 @@ class OfficeService {
     final paginationUtil = PaginationUtil(dio);
 
     return await paginationUtil.fetchPaginatedData<Office>(
-      endpoint: '${ApiEndpoint().office}/page',
+      endpoint: '${ApiEndpoint().officewithInactive}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
@@ -27,7 +27,7 @@ class OfficeService {
   }
 
   Future<void> createOrUpdateOffice(Office office) async {
-    var url = ApiEndpoint().office;
+    var url = ApiEndpoint().officewithInactive;
 
     try {
       final Map<String, dynamic> requestData = office.toJson();
@@ -74,7 +74,7 @@ class OfficeService {
   }
 
   Future<void> deleteOffice(String officeId) async {
-    final url = '${ApiEndpoint().office}/$officeId';
+    final url = '${ApiEndpoint().officewithInactive}/$officeId';
     await AuthenticatedRequest.delete(dio, url);
   }
 
@@ -100,7 +100,7 @@ class OfficeService {
   }
 
   Future<List<Office>> filterOffices(String name) async {
-    final url = '${ApiEndpoint().office}/filter/$name';
+    final url = '${ApiEndpoint().officewithInactive}/filter/$name';
     try {
       final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {

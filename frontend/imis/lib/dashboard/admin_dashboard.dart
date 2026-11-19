@@ -171,7 +171,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     try {
       final data = await service.fetchAll(
         usersEndpoint: ApiEndpoint().users,
-        officeEndpoint: ApiEndpoint().office,
+        officeEndpoint: ApiEndpoint().officewithInactive,
         teamEndpoint: ApiEndpoint().team,
         auditorEndpoint: ApiEndpoint().auditor,
         deliverablesEndpoint: ApiEndpoint().deliverables,

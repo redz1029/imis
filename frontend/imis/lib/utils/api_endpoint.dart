@@ -13,7 +13,7 @@ class ApiEndpoint {
   late String pgsperiod;
   late String deliverables;
   late String performancegovernancesystem;
-  late String office;
+  late String officewithInactive;
   late String team;
   late String auditorteam;
   late String userRole;
@@ -127,7 +127,7 @@ class ApiEndpoint {
     deliverables = '$baseUrl/deliverables';
     deliverable = '$baseUrl/deliverable';
     performancegovernancesystem = '$baseUrl/pgs';
-    office = '$baseUrl/Office';
+    officewithInactive = '$baseUrl/Office';
     team = '$baseUrl/Team';
     auditorteam = '$baseUrl/auditorTeam';
     userRole = '$baseUrl/userRoles';

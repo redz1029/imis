@@ -75,7 +75,7 @@ class CommonService {
   }
 
   Future<List<Office>> fetchOffices() => _fetchList(
-    ApiEndpoint().office,
+    ApiEndpoint().officewithInactive,
     (e) => Office.fromJson(e),
     'Failed to fetch offices',
   );
@@ -220,7 +220,7 @@ class CommonService {
   Future<Office> getOfficeById(String id) async {
     final response = await AuthenticatedRequest.get(
       dio,
-      '${ApiEndpoint().office}/$id',
+      '${ApiEndpoint().officewithInactive}/$id',
     );
     return Office.fromJson(response.data);
   }
