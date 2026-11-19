@@ -173,10 +173,12 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   /// schedule but is offered Submit only on the ones of the team they lead.
   bool _canSubmit(AuditSchedules schedule) =>
       schedule.signatories.isEmpty &&
-      (_isAdmin ||
-          (permissionService.hasPermission(AppPermissions.auditScheduleSubmit) &&
-              schedule.teamId != null &&
-              _myTeamIds.contains(schedule.teamId)));
+      // Only the Auditor Team Leader of the schedule's team submits: an
+      // Administrator has no submit right.
+      !_isAdmin &&
+      permissionService.hasPermission(AppPermissions.auditScheduleSubmit) &&
+      schedule.teamId != null &&
+      _myTeamIds.contains(schedule.teamId);
 
   /// The schedules of the plan the signed-in user may submit.
   List<AuditSchedules> _submittable(_PlanGroup group) =>

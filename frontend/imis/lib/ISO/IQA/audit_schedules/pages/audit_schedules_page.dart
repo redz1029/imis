@@ -231,35 +231,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         );
         if (matched.id > 0) {
           g.schedule = matched;
-        } else if (_isAdmin) {
-          // The server now creates every office's schedule when the plan is
-          // approved, so only an Administrator (who sees all offices) fills a
-          // missing one. Everyone else must not create rows as a side effect of
-          // opening the page.
-          try {
-            final firstEntry = g.entries.first;
-            final created = await _scheduleService.addAuditSchedule(
-              AuditSchedules(
-                purpose: _kFixedPurposeText,
-                activity: _kFixedActivityText,
-                isActive: true,
-                startDate: planSummary.startDate,
-                endDate: planSummary.endDate,
-                auditPlanId: planSummary.id,
-                auditPlanEntryId: firstEntry.id,
-              ),
-            );
-            if (created.id > 0) {
-              if (_hasPermission(AppPermissions.auditScheduleSubmit)) {
-                await _scheduleService.submitAuditSchedule(created.id, userId: _currentUser?.id);
-              }
-              final refreshed = await _scheduleService.getAuditScheduleById(created.id);
-              g.schedule = refreshed ?? created;
-            }
-          } catch (e) {
-            debugPrint('Auto-schedule creation error: $e');
-          }
         }
+        // A schedule is created (and submitted) only by the Auditor Team
+        // Leader of the team, and the server already creates every office's
+        // schedule when the plan is approved. Opening this page never creates
+        // or submits one — least of all for an Administrator.
       }
 
       // The server returns only the schedules this user may see (a team leader:
@@ -1445,8 +1421,10 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     // behaviour, so the page stays usable for support staff.
     final canConfirm = _isAdmin || _hasPermission(AppPermissions.auditScheduleConfirm);
     final canReject = _isAdmin || _hasPermission(AppPermissions.auditScheduleReject);
-    final canSubmit = _isAdmin ||
-        (_hasPermission(AppPermissions.auditScheduleSubmit) && _isMine(group));
+    // Only the Auditor Team Leader of the team submits: not an Administrator.
+    final canSubmit = !_isAdmin &&
+        permissionService.hasPermission(AppPermissions.auditScheduleSubmit) &&
+        _isMine(group);
 
     final showDecision =
         status == 'Pending' ||
@@ -2047,12 +2025,14 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             children: [
               TextField(
                 controller: _activityController,
-                // Only the leader of the assigned team (or an Administrator)
-                // edits the activity.
+                // Only the leader of the assigned team edits the activity
+                // (the server refuses an Administrator).
                 readOnly: activityGroup == null ||
-                    !(_isAdmin ||
-                        (_hasPermission(AppPermissions.editAuditSchedule) &&
-                            _isMine(activityGroup))),
+                    _isAdmin ||
+                    !(permissionService.hasPermission(
+                          AppPermissions.editAuditSchedule,
+                        ) &&
+                        _isMine(activityGroup)),
                 minLines: 9,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
