@@ -100,11 +100,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
                 .GetCurrentUserAsync().ConfigureAwait(false);
             if (currentUser == null)
                 return Results.Unauthorized();
-
-            if (!string.Equals(currentUser.Id, userId, StringComparison.OrdinalIgnoreCase))
-                return Results.Json(new { message = "Hindi tugma ang userId sa naka-login na user." },
-                    statusCode: StatusCodes.Status403Forbidden);
-
+     
             if (dto.Id > 0)
             {
                 var existing = await service.GetByIdAsync(dto.Id, cancellationToken);
@@ -131,74 +127,6 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
-        }
-
-        private async Task<(string? Path, IResult? Error)> HandleAttachmentAsync(PolicyAndProcedureForm form, string? currentPath, CancellationToken cancellationToken)
-        {
-            if (form.MinutesAttachmentPath != null && form.MinutesAttachmentPath.Length > 0)
-            {
-                if (string.IsNullOrWhiteSpace(_ftpBasePath))
-                    return (null, Results.BadRequest("FTP base path is missing."));
-
-                var tempPath = Path.GetTempFileName();
-
-                try
-                {
-                    await using (var stream = System.IO.File.Create(tempPath))
-                    {
-                        await form.MinutesAttachmentPath.CopyToAsync(stream, cancellationToken);
-                    }
-
-                    var uniqueFileName = $"{Guid.NewGuid()}_{form.MinutesAttachmentPath.FileName}";
-                    var result = await FTPHelper.UploadAsync(tempPath, _ftpBasePath, uniqueFileName, cancellationToken);
-
-                    if (!result.isSuccess)
-                        return (null, Results.BadRequest(result.responseMsg));
-
-                    if (result.hasBeenCancelled)
-                        return (null, Results.StatusCode(499));
-
-                    return (result.uploadedFilePath, null);
-                }
-                finally
-                {
-                    System.IO.File.Delete(tempPath);
-                }
-            }
-
-            if (form.RemoveAttachment)
-            {
-                if (!string.IsNullOrWhiteSpace(currentPath))
-                {
-                    var fullPath = currentPath.Replace("\\", "/");
-                    var directory = Path.GetDirectoryName(fullPath)?.Replace("\\", "/");
-                    var fileName = Path.GetFileName(fullPath);
-
-                    if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(fileName))
-                        await FTPHelper.DeleteAsync(directory, fileName, cancellationToken);
-                }
-
-                return (null, null);
-            }
-
-            return (currentPath, null);
-        }
-
-        private static PolicyAndProcedureDto MapToDto(PolicyAndProcedureForm form, long id, string? attachmentPath) => new()
-        {
-            Id = id,
-            Title = form.Title,
-            ProcessOwner = form.ProcessOwner,
-            RegulatoryStandard = form.RegulatoryStandard,
-            EffectiveDate = form.EffectiveDate,
-            SectionId = form.SectionId,
-            DocumentCode = form.DocumentCode,
-            Revision = form.Revision,
-            Content = form.Content,
-            IsMasterCopy = form.IsMasterCopy,
-            IsControlledCopy = form.IsControlledCopy,
-            IsReceived = form.IsReceived,
-            MinutesAttachmentPath = attachmentPath
-        };
+        }       
     }
 }

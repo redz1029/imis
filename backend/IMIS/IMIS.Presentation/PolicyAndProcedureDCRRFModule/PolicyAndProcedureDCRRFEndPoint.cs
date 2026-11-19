@@ -1,7 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.PolicyAndProcedureDCRRFModule;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +29,7 @@ namespace IMIS.Presentation.PolicyAndProcedureDCRRFModule
                 var existingpolicyAndProcedureDCRRFDto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingpolicyAndProcedureDCRRFDto == null)
                 {
-                    return Results.NotFound($"Office with ID {id} not found.");
+                    return Results.NotFound($"DCRRF with ID {id} not found.");
                 }
                 await service.SaveOrUpdateAsync(policyAndProcedureDCRRFDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_policyAndProcedureDCRRF, cancellationToken);
