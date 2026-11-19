@@ -210,8 +210,9 @@ namespace IMIS.Application.AuditScheduleModule
 
         /// <summary>
         /// The Auditor Team Leader submits only the schedules of the team (and so
-        /// the offices) assigned to them. Administrators may submit any; a call
-        /// with no user is an internal one and is not restricted.
+        /// the offices) assigned to them. An Administrator is not a team leader and
+        /// may not submit; a call with no user is an internal one and is not
+        /// restricted.
         /// </summary>
         private static async Task<bool> CanSubmitScheduleAsync(
             DbContext dbContext, string? userId, AuditSchedule schedule, CancellationToken cancellationToken)
@@ -219,9 +220,8 @@ namespace IMIS.Application.AuditScheduleModule
             if (string.IsNullOrWhiteSpace(userId))
                 return true;
 
-            if (await IsInRoleAsync(dbContext, userId, AdministratorRoleName, cancellationToken))
-                return true;
-
+            // Administrators get no special right here: the team leader of the
+            // schedule's team (the role check) is the only one who submits.
             return await IsTeamLeaderForAsync(dbContext, userId, schedule, cancellationToken);
         }
 
