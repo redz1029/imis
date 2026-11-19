@@ -204,12 +204,6 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new StrategicChangeAgendaPermission(),
-                new AuditProgrammePermission(),
-                new AuditPlanPermission(),
-                new AuditSchedulePermission(),
-                new AuditChecklistPermission(),
-                new AuditReportPermission(),
-                new NonconformingActionReportPermission(),
                 new PolicyAndProcedurePermission(),
                 new PolicyAndProcedureHistoryLogPermission());
 
@@ -826,94 +820,100 @@ namespace IMIS.Infrastructure.Auths
                 new PolicyAndProcedurePermission());
 
             // -----------------------------------------------------------------
-            // IQA (ISO) roles
-            // Seeding only ever ADDS claims, so after granting what a role may
-            // do, SyncIqaPermissionsAsync strips every other IQA claim an older
-            // seed run may have left on the role. Administrator keeps all of
-            // them (SeedAllPermissionsForAdministrator above).
+            // IQA (ISO) roles. Each role gets the permission classes of the
+            // modules it works on; a module it only looks at is view-only.
+            // Administrator keeps all of them (SeedAllPermissionsForAdministrator).
             // -----------------------------------------------------------------
-            var programme = new AuditProgrammePermission();
-            var programmeFlow = new AuditProgrammeWorkflowPermission();
-            var plan = new AuditPlanPermission();
-            var planFlow = new AuditPlanWorkflowPermission();
-            var schedule = new AuditSchedulePermission();
-            var scheduleFlow = new AuditScheduleWorkflowPermission();
-            var checklist = new AuditChecklistPermission();
-            var checklistFlow = new AuditChecklistWorkflowPermission();
-            var report = new AuditReportPermission();
-            var reportFlow = new AuditReportWorkflowPermission();
-            var ncar = new NonconformingActionReportPermission();
-            var ncarFlow = new NonconformingActionReportWorkflowPermission();
 
-            // View access to every IQA module.
-            var viewAllIqa = new[]
-            {
-                programme.View, plan.View, schedule.View,
-                checklist.View, report.View, ncar.View
-            };
-
-            // QMR: views all of IQA; ONLY approves or rejects the Audit
-            // Programme and the Audit Plan.
-            var qmrPermissions = viewAllIqa.Concat(new[]
-            {
-                programmeFlow.CanApprove, programmeFlow.CanReject,
-                planFlow.CanApprove, planFlow.CanReject
-            }).ToArray();
+            // QMR: approves or rejects the Audit Programme and the Audit Plan.
             await PermissionSeeder.SeedPermissionForRole<QMR, IdentityRole>(_roleManager,
+                new AuditProgrammeWorkflowPermission(),
+                new AuditPlanWorkflowPermission(),
                 new PolicyAndProcedurePermission());
-            await PermissionSeeder.SeedSpecificPermssionsToRole<QMR, IdentityRole>(_roleManager, qmrPermissions);
-            await SyncIqaPermissionsAsync(new QMR().Name, qmrPermissions);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMR, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
 
-            // QMS: views all of IQA; ONLY adds notes.
-            var qmsPermissions = viewAllIqa.Concat(new[]
-            {
-                programmeFlow.CanNote, planFlow.CanNote, scheduleFlow.CanNote,
-                checklistFlow.CanNote, reportFlow.CanNote
-            }).ToArray();
-            await PermissionSeeder.SeedSpecificPermssionsToRole<QMS, IdentityRole>(_roleManager, qmsPermissions);
-            await SyncIqaPermissionsAsync(new QMS().Name, qmsPermissions);
+            // QMS: notes the Audit Programme, Plan, Schedule, Checklist and Report.
+            await PermissionSeeder.SeedPermissionForRole<QMS, IdentityRole>(_roleManager,
+                new AuditProgrammeWorkflowPermission(),
+                new AuditPlanWorkflowPermission(),
+                new AuditScheduleWorkflowPermission(),
+                new AuditChecklistWorkflowPermission(),
+                new AuditReportWorkflowPermission());
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMS, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
 
-            // Lead Auditor: prepares the Audit Programme and Audit Plan, views
-            // everything else, and is the last approver of an NCAR.
-            var leadAuditorPermissions = viewAllIqa.Concat(new[]
-            {
-                programme.Add, programme.Edit, programmeFlow.CanSubmitForApproval,
-                plan.Add, plan.Edit, planFlow.CanSubmitForApproval,
-                ncarFlow.CanVerify, ncarFlow.CanValidateAndClose
-            }).ToArray();
-            await PermissionSeeder.SeedSpecificPermssionsToRole<LeadAuditor, IdentityRole>(_roleManager, leadAuditorPermissions);
-            await SyncIqaPermissionsAsync(new LeadAuditor().Name, leadAuditorPermissions);
+            // Lead Auditor: prepares the Audit Programme and Audit Plan, and is
+            // the last approver of an NCAR.
+            await PermissionSeeder.SeedPermissionForRole<LeadAuditor, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditProgrammeWorkflowPermission(),
+                new AuditPlanPermission(),
+                new AuditPlanWorkflowPermission(),
+                new NonconformingActionReportWorkflowPermission());
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<LeadAuditor, IdentityRole>(_roleManager,
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
 
             // Auditor Team Leader: prepares the Audit Schedule, assigns the
-            // clauses of the Audit Checklist to the auditors, makes the Audit
-            // Report (which issues its NCARs), and views everything else.
-            var teamLeaderPermissions = viewAllIqa.Concat(new[]
+            // clauses of the Audit Checklist, makes the Audit Report and raises
+            // its NCARs.
+            var teamLeaderPermissions = new BasePermission[]
             {
-                schedule.Add, schedule.Edit, scheduleFlow.CanSubmit,
-                checklist.Add, checklist.Edit, checklistFlow.CanSubmit,
-                report.Add, report.Edit, reportFlow.CanSubmit,
-                ncar.Add
-            }).ToArray();
-            await PermissionSeeder.SeedSpecificPermssionsToRole<AuditorTeamLeader, IdentityRole>(_roleManager, teamLeaderPermissions);
-            await SyncIqaPermissionsAsync(new AuditorTeamLeader().Name, teamLeaderPermissions);
-
-            // Department Head / auditee: confirms or reschedules the Audit
-            // Schedule, views the Audit Programme and Audit Plan, and answers
-            // and submits the NCARs raised against the office.
-            var departmentHeadPermissions = new[]
-            {
-                programme.View, plan.View, schedule.View, ncar.View,
-                scheduleFlow.CanConfirm, scheduleFlow.CanReject,
-                ncar.Edit, ncarFlow.CanAcknowledge, ncarFlow.CanRespond
+                new AuditSchedulePermission(),
+                new AuditScheduleWorkflowPermission(),
+                new AuditChecklistPermission(),
+                new AuditChecklistWorkflowPermission(),
+                new AuditReportPermission(),
+                new AuditReportWorkflowPermission(),
+                new NonconformingActionReportPermission()
             };
-            await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager, departmentHeadPermissions);
-            await SyncIqaPermissionsAsync(new DepartmentHead().Name, departmentHeadPermissions);
+            await PermissionSeeder.SeedPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager,
+                teamLeaderPermissions);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission());
+
+            // Department Head (auditee): confirms or reschedules the Audit
+            // Schedule and answers the NCARs raised against the office.
+            await PermissionSeeder.SeedPermissionForRole<DepartmentHead, IdentityRole>(_roleManager,
+                new AuditScheduleWorkflowPermission(),
+                new NonconformingActionReportPermission(),
+                new NonconformingActionReportWorkflowPermission());
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission());
+
+            // Auditor: works on checklists, reports and NCARs.
+            await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
+                new AuditChecklistPermission(),
+                new AuditChecklistWorkflowPermission(),
+                new AuditReportPermission(),
+                new AuditReportWorkflowPermission(),
+                new NonconformingActionReportPermission(),
+                new NonconformingActionReportWorkflowPermission());
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission());
 
             // The Audit Programme, Plan and Schedule forms fill their dropdowns
             // (audit team, office, ISO clause) from these lookup lists. Without
             // View access the lists come back 403 and the dropdowns are empty,
             // so every IQA role that opens those forms gets view-only access.
-            // These are not IQA claims, so SyncIqaPermissionsAsync leaves them be.
             var iqaLookups = new BaseOperationPermission[]
             {
                 new TeamPermission(),
@@ -932,40 +932,11 @@ namespace IMIS.Infrastructure.Auths
             // menu (Audit Schedule, Checklist, Report, NCAR ...) shows up.
             await GrantRoleUserClaimsAsync(
                 new AuditorTeamLeader().Name,
-                teamLeaderPermissions.Concat(iqaLookups.Select(p => p.View)).ToArray());
-
-            // Auditor works on checklists/NCARs/report drafts.
-            await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
-                programme,
-                plan,
-                schedule,
-                checklist,
-                report,
-                ncar);
-
-            await PermissionSeeder.SeedSpecificPermssionsToRole<PgsAuditorRole, IdentityRole>(_roleManager,
-                checklist.Add,
-                checklist.Edit,
-                checklistFlow.CanSubmit,
-                report.Add,
-                report.Edit,
-                reportFlow.CanSubmit,
-                ncar.Add,
-                ncar.Edit,
-                ncarFlow.CanAcknowledge,
-                ncarFlow.CanVerify);
-
-            // The Auditor role only works on checklists, reports and NCARs.
-            // Remove programme/plan/schedule write access that older seed runs
-            // may have granted so the role matches its documented workflow.
-            await RemovePermissionsFromRole(
-                new PgsAuditorRole().Name,
-                programme.Add,
-                programme.Edit,
-                plan.Add,
-                plan.Edit,
-                schedule.Add,
-                schedule.Edit);
+                PermissionValues(teamLeaderPermissions)
+                    .Append(new AuditProgrammePermission().View)
+                    .Append(new AuditPlanPermission().View)
+                    .Concat(iqaLookups.Select(p => p.View))
+                    .ToArray());
 
             // Administrators must see and do everything in IQA, so every user in
             // the Administrator role holds all of the role's permissions.
@@ -981,24 +952,9 @@ namespace IMIS.Infrastructure.Auths
                 
         }
 
-        private static readonly BasePermission[] IqaPermissionSet =
-        {
-            new AuditProgrammePermission(), new AuditProgrammeWorkflowPermission(),
-            new AuditPlanPermission(), new AuditPlanWorkflowPermission(),
-            new AuditSchedulePermission(), new AuditScheduleWorkflowPermission(),
-            new AuditChecklistPermission(), new AuditChecklistWorkflowPermission(),
-            new AuditReportPermission(), new AuditReportWorkflowPermission(),
-            new NonconformingActionReportPermission(), new NonconformingActionReportWorkflowPermission()
-        };
-
-        /// <summary>
-        /// Leaves a role with exactly the IQA permissions in <paramref name="allowed"/>:
-        /// every other IQA claim (granted by an older seed run) is removed.
-        /// Non-IQA claims are never touched.
-        /// </summary>
-        private async Task SyncIqaPermissionsAsync(string roleName, string[] allowed)
-        {
-            var iqaValues = IqaPermissionSet
+        /// <summary>The permission values (Add, View, CanSubmit ...) of the given permission classes.</summary>
+        private static string[] PermissionValues(params BasePermission[] permissions) =>
+            permissions
                 .SelectMany(permission => permission.GetType()
                     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Where(p => p.PropertyType == typeof(string) &&
@@ -1008,32 +964,9 @@ namespace IMIS.Infrastructure.Auths
                     .Select(p => p.GetValue(permission)?.ToString()))
                 .Where(v => !string.IsNullOrWhiteSpace(v))
                 .Select(v => v!)
-                .Distinct(StringComparer.OrdinalIgnoreCase);
-
-            var stale = iqaValues
-                .Where(v => !allowed.Contains(v, StringComparer.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
-            await RemovePermissionsFromRole(roleName, stale);
-
-            // Users hold their effective permissions as per-user claims tied to
-            // the role (assigned from the role's pool), so drop the stale ones
-            // too; otherwise the users would keep the access the role lost.
-            var role = await _roleManager.FindByNameAsync(roleName);
-            if (role == null || stale.Length == 0)
-                return;
-
-            var staleUserClaims = _db.Set<UserClaim<string>>()
-                .Where(c => c.RoleId == role.Id &&
-                            c.ClaimType == PermissionClaimType.Claim &&
-                            stale.Contains(c.ClaimValue!))
-                .ToList();
-            if (staleUserClaims.Count == 0)
-                return;
-
-            _db.Set<UserClaim<string>>().RemoveRange(staleUserClaims);
-            await _db.SaveChangesAsync();
-        }
         /// <summary>
         /// The app reads a user's permissions from per-user claims tied to the
         /// role. Permissions added to the Administrator role after an admin was
@@ -1145,21 +1078,6 @@ namespace IMIS.Infrastructure.Auths
             }
 
             await _db.SaveChangesAsync();
-        }
-
-        private async Task RemovePermissionsFromRole(string roleName, params string[] permissionValues)
-        {
-            var role = await _roleManager.FindByNameAsync(roleName);
-            if (role == null)
-                return;
-
-            var existingClaims = await _roleManager.GetClaimsAsync(role);
-            foreach (var claim in existingClaims.Where(c =>
-                c.Type == PermissionClaimType.Claim &&
-                permissionValues.Contains(c.Value, StringComparer.OrdinalIgnoreCase)))
-            {
-                await _roleManager.RemoveClaimAsync(role, claim);
-            }
         }
     }
 }
