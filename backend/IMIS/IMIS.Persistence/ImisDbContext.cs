@@ -83,6 +83,7 @@ namespace IMIS.Persistence
         public DbSet<PolicyAndProcedure> PolicyAndProcedure { get; set; }
         public DbSet<PolicyAndProcedureSignatoryTemplate> PolicyAndProcedureSignatoryTemplate { get; set; }
         public DbSet<PolicyAndProcedureSignatory> PolicyAndProcedureSignatory { get; set; }
+        public DbSet<PolicyAndProcedureSectionNumbering> PolicyAndProcedureSectionNumbering { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
