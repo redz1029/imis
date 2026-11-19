@@ -1335,6 +1335,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     final selectedFg =
         value == true ? Colors.green.shade900 : Colors.red.shade900;
 
+    final type = _rows[index].findingType;
     final control = SegmentedButton<bool>(
       emptySelectionAllowed: true,
       multiSelectionEnabled: false,
@@ -1360,56 +1361,24 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         ButtonSegment<bool>(
           value: false,
           label: Text(longLabels ? 'Non-conforming' : 'N'),
-          tooltip: 'Non-conforming',
+          tooltip: value == false && type != null
+              ? 'Non-conforming ($type) — click to change'
+              : 'Non-conforming',
         ),
       ],
       selected: value == null ? <bool>{} : <bool>{value},
-      onSelectionChanged: (s) =>
-          _setConforming(index, s.isEmpty ? null : s.first),
+      // Clicking N always asks NC or OFI — also on a row that is already N
+      // (a plain Flutter toggle would clear it). Y clears an N.
+      onSelectionChanged: (s) {
+        if (s.isEmpty && value == false) {
+          _changeFindingType(index);
+          return;
+        }
+        _setConforming(index, s.isEmpty ? null : s.first);
+      },
     );
 
-    // A "N" shows what it was typed as; tapping it changes NC <-> OFI.
-    if (value != false) return control;
-    final isOfi = _rows[index].findingType == AuditChecklist.opportunity;
-    final color = isOfi ? Colors.orange.shade800 : Colors.red.shade700;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment:
-          longLabels ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
-      children: [
-        control,
-        const SizedBox(height: 6),
-        Tooltip(
-          message: 'Tap to change between NC and OFI',
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => _changeFindingType(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    isOfi ? 'OFI' : 'NC',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: color,
-                    ),
-                  ),
-                  Icon(Icons.arrow_drop_down, size: 16, color: color),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    return control;
   }
 
   // ---- Clause groups: every clause once, its questions under it --------------
