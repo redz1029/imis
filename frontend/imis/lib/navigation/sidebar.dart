@@ -49,6 +49,7 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/qms_documents/pages/procedures_list_page.dart';
+import 'package:imis/qms_documents/policy_procedure_settings/pages/policy_procedure_settings_page.dart';
 // import 'package:imis/qms_documents/pages/procedures_list_page.dart';
 import 'package:imis/qms_documents/policy_signatory_template/pages/policy_signatory_template_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
@@ -1485,6 +1486,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 26) return const AuditStandardPage();
       if (selectedSubPage == 27) return const PolicySignatoryTemplatePage();
+      if (selectedSubPage == 28) return const PolicyProcedureSettingsPage();
     }
     return HomePage();
   }
@@ -1687,7 +1689,10 @@ class SidebarState extends State<Sidebar> {
             'QMS Modules',
             null,
             prefixTitle: false,
-            children: [NavChild('Policy and Procedure Template', 27)],
+            children: [
+              NavChild('Policy and Procedure Signatory Template', 27),
+              NavChild('Policy and Procedure Template', 28),
+            ],
           ),
         ],
       ),
