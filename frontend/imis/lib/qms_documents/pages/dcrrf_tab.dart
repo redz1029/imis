@@ -84,15 +84,12 @@ class DcrrfData {
 class DcrrfTab extends StatefulWidget {
   final int? procedureId;
 
-  /// Live header values ng document: title, docCode, revision, section...
   final Map<String, String> Function() header;
   final String initiatorName;
   final PapDcrrfService service;
 
-  /// Existing DCRRF record. Null = unang DCRRF pa lang (walang existing record).
   final DcrrfData? existing;
 
-  /// Save handler. Kapag null, magpapakita ng warning na hindi pa connected.
   final Future<void> Function(DcrrfData data)? onSave;
 
   const DcrrfTab({
@@ -211,25 +208,24 @@ class DcrrfTabState extends State<DcrrfTab> {
     final e = widget.existing;
 
     setState(() {
-      _history = rows.reversed.toList(); // newest first sa table
+      _history = rows.reversed.toList();
       _error = error;
 
       if (e != null) {
         _applyExisting(e);
       } else {
-        _initiator.text = widget.initiatorName;
+        final owner = (h['owner'] ?? '').trim();
+        _initiator.text = owner.isNotEmpty ? owner : widget.initiatorName;
         _date = DateTime.now();
         _docTitle.text = h['title'] ?? '';
         final code = (h['docCode'] ?? '').trim();
         _docCode.text = code.isNotEmpty ? code : (latest?.documentCode ?? '');
 
         if (latest == null) {
-          // Unang record pa lang: New document.
           _type = DcrrfType.newDoc;
           final rev = (h['revision'] ?? '').trim();
           _revNo.text = rev.isNotEmpty ? rev : '0';
         } else {
-          // May history na, pero hayaan ang user na pumili ng type.
           final lastRev = (latest.revision ?? '').trim();
           final n = int.tryParse(lastRev);
           _revNo.text = n == null ? lastRev : '${n + 1}';
@@ -342,8 +338,6 @@ class DcrrfTabState extends State<DcrrfTab> {
       _dirty = true;
     });
   }
-
-  // ---------------------------------------------------------------- UI
 
   OutlineInputBorder _outline(Color c) => OutlineInputBorder(
     borderRadius: BorderRadius.circular(8),

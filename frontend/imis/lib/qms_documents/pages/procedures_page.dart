@@ -360,7 +360,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   Future<String> _currentHtml() async {
-    await _captureEditor(); // laging fresh mula sa editor
+    await _captureEditor();
     return _latestHtml ?? widget.initialHtml ?? '';
   }
 

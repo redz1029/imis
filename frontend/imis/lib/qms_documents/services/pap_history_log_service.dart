@@ -1,26 +1,3 @@
-// import 'package:dio/dio.dart';
-// import 'package:imis/qms_documents/models/pap_history_log.dart';
-// import 'package:imis/utils/api_endpoint.dart';
-// import 'package:imis/utils/http_util.dart';
-
-// class PapHistoryLogService {
-//   final Dio dio;
-
-//   PapHistoryLogService(this.dio);
-
-//   Future<PapHistoryLog> getHistoryLog(int id) async {
-//     final url = '${ApiEndpoint().policyAndProcedureHistoryLog}/$id';
-//     try {
-//       final response = await AuthenticatedRequest.get(dio, url);
-//       if (response.statusCode != 200) {
-//         throw Exception('Failed to load history log.');
-//       }
-//       return PapHistoryLog.fromJson(response.data as Map<String, dynamic>);
-//     } on DioException {
-//       throw Exception('Failed to load history log.');
-//     }
-//   }
-// }
 import 'package:dio/dio.dart';
 import 'package:imis/qms_documents/models/pap_history_log.dart';
 import 'package:imis/utils/api_endpoint.dart';
