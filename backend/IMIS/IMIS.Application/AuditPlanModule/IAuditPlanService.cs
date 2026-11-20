@@ -39,5 +39,12 @@ namespace IMIS.Application.AuditPlanModule
         Task<(bool Success, string? Error)> SubmitAsync(int id, string? userId, string? comments, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, string action, string? comments, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The Lead Auditor re-opens an APPROVED plan: the signed chain is retired, a
+        /// signatories revision is recorded and the plan goes back to Draft so it
+        /// can be changed and signed again.
+        /// </summary>
+        Task<(bool Success, string? Error)> ReviseAsync(int id, string? userId, string? reason, CancellationToken cancellationToken);
     }
 }

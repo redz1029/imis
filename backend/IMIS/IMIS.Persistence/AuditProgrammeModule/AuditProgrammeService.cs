@@ -752,6 +752,31 @@ namespace IMIS.Application.AuditProgrammeModule
             return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
         }
 
+        public async Task<(bool Success, string? Error)> ReviseAsync(
+            int id,
+            string? userId,
+            string? reason,
+            CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditProgramme>()
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit programme not found.");
+
+            var result = await IQAApprovalWorkflow.ReviseAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditProgramme, entity.Id,
+                "audit programme", userId, reason, cancellationToken);
+            if (!result.Success) return result;
+
+            // Touching the row makes a concurrent double-revise fail on the row
+            // version instead of recording two revisions.
+            entity.LastModifiedDate = DateTime.UtcNow;
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(
             DbContext dbContext,
             CancellationToken cancellationToken)

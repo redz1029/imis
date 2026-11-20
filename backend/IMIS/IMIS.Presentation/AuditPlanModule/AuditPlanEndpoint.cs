@@ -257,9 +257,34 @@ namespace IMIS.Presentation.AuditPlanModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanApprove) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanNote)));
+
+            // REVISE — Approved -> Draft. Only the Lead Auditor (enforced in the
+            // service, from the signed-in user — never from the request body).
+            app.MapPut("/{id:int}/revise", async (
+                int id,
+                [FromBody] ReviseAuditPlanRequest? body,
+                HttpContext httpContext,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.ReviseAsync(id, userId, body?.Reason, cancellationToken).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = "Audit plan reopened for revision." });
+            })
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmitForApproval));
         }
 
         public record SubmitAuditPlanRequest(string? UserId, string? Comments);
+        public record ReviseAuditPlanRequest(string? Reason);
         public record DecideAuditPlanRequest(string ApproverId, bool? Approve, string? Action, string? Comments);
     }
 }

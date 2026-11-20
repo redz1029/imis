@@ -238,6 +238,29 @@ namespace IMIS.Application.AuditPlanModule
             return saved;
         }
 
+        public async Task<(bool Success, string? Error)> ReviseAsync(
+            int id, string? userId, string? reason, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditPlan>()
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit plan not found.");
+
+            var result = await IQAApprovalWorkflow.ReviseAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan",
+                userId, reason, cancellationToken);
+            if (!result.Success)
+                return result;
+
+            // Touching the plan row makes a concurrent double-revise fail on the
+            // row version instead of recording two revisions.
+            entity.LastModifiedDate = DateTime.UtcNow;
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
         /// <summary>
         /// The approved plan's schedules were just created: the Auditor Team
         /// Leader of each audit team is told to submit them. Never fails the approval.

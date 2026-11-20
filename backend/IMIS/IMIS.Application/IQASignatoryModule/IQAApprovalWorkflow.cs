@@ -54,7 +54,16 @@ namespace IMIS.Application.IQASignatoryModule
             public const string Rejected = "Rejected";
             public const string Noted = "Noted";
             public const string Confirmed = "Confirmed";
+
+            /// <summary>
+            /// The Lead Auditor re-opened an APPROVED Audit Programme / Plan. The
+            /// signatories must sign it again; the number of these history rows is
+            /// the form's "signatories revision" (0 = the original signing).
+            /// </summary>
+            public const string Revised = "Revised";
         }
+
+        public const string LeadAuditorRoleName = "Lead Auditor";
 
         private static bool Is(string? value, string expected) =>
             string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
@@ -264,7 +273,8 @@ namespace IMIS.Application.IQASignatoryModule
 
             var hadRejection = await db.Set<IQAApprovalHistory>()
                 .AnyAsync(h => h.AuditEntityType == entityType && h.AuditEntityId == entityId &&
-                    (h.Action == Actions.Rejected || h.Status == StateName(StateCodes.RevisionRequired, entityType)), ct);
+                    (h.Action == Actions.Rejected || h.Action == Actions.Revised ||
+                     h.Status == StateName(StateCodes.RevisionRequired, entityType)), ct);
 
             // Retire previous live signatory chain (their history remains preserved in IQAApprovalHistory)
             foreach (var old in live)
@@ -386,6 +396,102 @@ namespace IMIS.Application.IQASignatoryModule
                 .ConfigureAwait(false);
 
             return (true, null);
+        }
+
+        /// <summary>
+        /// The Lead Auditor re-opens an APPROVED Audit Programme / Plan so it can
+        /// be changed and signed again. The signed chain is retired (kept in the
+        /// approval history), a "Revised" history row is recorded — that row IS the
+        /// next signatories revision number — and the form goes back to Draft so
+        /// it is edited and submitted again for the signatories.
+        /// Only the Lead Auditor may do it; an Administrator has no special right here.
+        /// </summary>
+        public static async Task<(bool Success, string? Error)> ReviseAsync(
+            DbContext db,
+            string entityType,
+            int entityId,
+            string displayName,
+            string? userId,
+            string? reason,
+            CancellationToken ct)
+        {
+            if (entityType != EntityTypes.AuditProgramme && entityType != EntityTypes.AuditPlan)
+                return (false, $"A {displayName} cannot be revised this way.");
+
+            if (string.IsNullOrWhiteSpace(reason))
+                return (false, "Please provide the reason for the revision.");
+
+            var actorUserId = await ResolveActorUserIdAsync(db, userId, ct).ConfigureAwait(false);
+            if (actorUserId == null)
+                return (false, "Your account was not found.");
+
+            var isLeadAuditor = await (
+                from ur in db.Set<Microsoft.AspNetCore.Identity.IdentityUserRole<string>>().AsNoTracking()
+                join r in db.Set<Microsoft.AspNetCore.Identity.IdentityRole>().AsNoTracking() on ur.RoleId equals r.Id
+                where ur.UserId == actorUserId && r.Name == LeadAuditorRoleName
+                select ur.UserId).AnyAsync(ct).ConfigureAwait(false);
+            if (!isLeadAuditor)
+                return (false, $"Only the Lead Auditor can revise an approved {displayName}.");
+
+            var live = await db.Set<IQASignatory>()
+                .Where(s => s.AuditEntityType == entityType && s.AuditEntityId == entityId && !s.IsDeleted)
+                .ToListAsync(ct).ConfigureAwait(false);
+
+            var state = DeriveStateCode(live, entityType);
+            if (state != StateCodes.Approved)
+                return (false, $"Only an approved {displayName} can be revised. It is now '{StateName(state, entityType)}'.");
+
+            var formerSignatories = live
+                .Select(s => s.SignatoryId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToList();
+
+            // The signed chain is retired; its decisions stay in IQAApprovalHistory.
+            foreach (var old in live)
+                old.IsDeleted = true;
+
+            db.Set<IQAApprovalHistory>().Add(new IQAApprovalHistory
+            {
+                Id = 0,
+                AuditEntityType = entityType,
+                AuditEntityId = entityId,
+                AuditProgrammeId = entityType == EntityTypes.AuditProgramme ? entityId : null,
+                AuditPlanId = entityType == EntityTypes.AuditPlan ? entityId : null,
+                Action = Actions.Revised,
+                Status = Actions.Revised,
+                UserId = actorUserId,
+                ActionDate = DateTime.UtcNow,
+                Comments = reason.Trim(),
+                RoleOrPosition = LeadAuditorRoleName
+            });
+
+            await NotifySignatoriesOfRevisionAsync(db, entityType, entityId, actorUserId, formerSignatories, reason.Trim(), ct)
+                .ConfigureAwait(false);
+
+            return (true, null);
+        }
+
+        /// <summary>Tells the people who had signed that the form was reopened and will come back to them.</summary>
+        private static async Task NotifySignatoriesOfRevisionAsync(
+            DbContext db, string entityType, int entityId, string actorUserId,
+            List<string> formerSignatories, string reason, CancellationToken ct)
+        {
+            try
+            {
+                if (formerSignatories.Count == 0) return;
+                var label = IqaNotifier.Label(entityType);
+                var who = await IqaNotifier.NameOfAsync(db, actorUserId, ct).ConfigureAwait(false);
+                await IqaNotifier.AddAsync(
+                    db, formerSignatories, actorUserId,
+                    IqaNotifier.Types.Resubmitted,
+                    $"{label} is being revised",
+                    $"{who} (Lead Auditor) reopened the approved {ItemName(entityType)} for revision. It will come back for your signature. Reason: {reason}",
+                    entityType, entityId, null, ct).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never block the revision
+            }
         }
 
         // ------------------------------------------------------------------

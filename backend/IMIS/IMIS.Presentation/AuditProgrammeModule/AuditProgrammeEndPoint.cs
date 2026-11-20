@@ -221,6 +221,30 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanNote)));
 
+            // REVISE — Approved -> Draft. Only the Lead Auditor (enforced in the
+            // service, from the signed-in user — never from the request body).
+            app.MapPut("/{id:int}/revise", async (
+                int id,
+                [FromBody] ReviseAuditProgrammeRequest? body,
+                HttpContext httpContext,
+                IAuditProgrammeService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.ReviseAsync(id, userId, body?.Reason, cancellationToken).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = "Audit programme reopened for revision." });
+            })
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmitForApproval));
+
             // PAGINATION
             app.MapGet("/page", async (
                 [FromQuery] int page,
@@ -259,6 +283,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
         public record SubmitAuditProgrammeRequest(string? UserId, string? Comments);
+        public record ReviseAuditProgrammeRequest(string? Reason);
         public record DecideAuditProgrammeRequest(string ApproverId, bool? Approve, string? Action, string? Comments);
     }
 }

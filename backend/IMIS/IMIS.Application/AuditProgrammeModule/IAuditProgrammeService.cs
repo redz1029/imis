@@ -51,6 +51,17 @@ namespace IMIS.Application.AuditProgrammeModule
             string? comments,
             CancellationToken cancellationToken);
 
+        /// <summary>
+        /// The Lead Auditor re-opens an APPROVED programme: the signed chain is
+        /// retired, a signatories revision is recorded and the programme goes
+        /// back to Draft so it can be changed and signed again.
+        /// </summary>
+        Task<(bool Success, string? Error)> ReviseAsync(
+            int id,
+            string? userId,
+            string? reason,
+            CancellationToken cancellationToken);
+
 
     }
 }
