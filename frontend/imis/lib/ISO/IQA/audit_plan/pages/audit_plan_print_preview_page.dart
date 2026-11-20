@@ -15,6 +15,7 @@ import 'package:printing/printing.dart';
 import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/pdf_download.dart';
@@ -75,6 +76,11 @@ const double _kTitleH = 30.0;
 const double _kObjGap = 8.0;
 const double _kLabelW = 104.0;
 const double _kSigGap = 16.0;
+
+/// The "Rev. N" line above the signatures: the line itself and the gap under
+/// it. Counted in the room the signature block needs.
+const double _kRevLineH = 12.0;
+const double _kRevGapBelow = 8.0;
 const double _kSigSpace = 26.0;
 const double _kSigPadL = 22.0;
 const double _kSigPadR = 16.0;
@@ -137,6 +143,7 @@ class _PrintData {
     this.leaders = const {},
     required this.signatories,
     required this.revision,
+    this.signatoryRevision = 0,
   });
 
   final String objective;
@@ -149,6 +156,11 @@ class _PrintData {
   /// Names of the team leaders of each team; they are marked with * on the form.
   final Map<int, Set<String>> leaders;
   final List<_Sig> signatories;
+
+  /// How many times the Lead Auditor re-opened the approved plan so its
+  /// signatories had to sign again (0 = the original signing). Printed as
+  /// "Rev. N" just above the signatures.
+  final int signatoryRevision;
 }
 
 class _PdfAssets {
@@ -210,8 +222,15 @@ _Sig _preparerOf(AuditPlan plan) {
   const heading = 'Prepared by:';
   const role = 'IQA Lead Auditor';
 
+  // After the Lead Auditor revised the approved plan, only a submission made
+  // since then counts: the chain is signed again, so nobody has prepared this
+  // revision until it is submitted.
+  final revisedAt = SignatoryRevision.latest(plan.approvalHistory)?.actionDate;
   final submits = plan.approvalHistory
-      .where((h) => h.action.toLowerCase().startsWith('submit'))
+      .where((h) =>
+          (h.action.toLowerCase().startsWith('submit') ||
+              h.action.toLowerCase() == 'resubmitted') &&
+          (revisedAt == null || h.actionDate.isAfter(revisedAt)))
       .toList()
     ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
   if (submits.isNotEmpty) {
@@ -602,6 +621,7 @@ Future<_PrintData> _loadPrintData(int planId) async {
     rosters: rosters,
     signatories: _buildSignatories(plan, _preparerOf(plan)),
     revision: revision,
+    signatoryRevision: SignatoryRevision.count(plan.approvalHistory),
   );
 }
 
@@ -1108,7 +1128,7 @@ class _PlanPdfBuilder {
     final lastIdx = specs.length - 1;
     final lastUsed = specs[lastIdx].items.fold<double>(0, (s, e) => s + e.h);
     final room = cap(lastIdx) - lastUsed;
-    if (room >= _sigH + _kSigGap) {
+    if (room >= _sigH + _kSigGap + _kRevLineH + _kRevGapBelow) {
       specs[lastIdx].showSig = true;
     } else {
       final sigPage = _PageSpec(<_Item>[])
@@ -1163,7 +1183,17 @@ class _PlanPdfBuilder {
     if (spec.showBox) kids.add(_tableBox(spec, idx));
 
     if (spec.showSig) {
+      // The gap above the signatures holds the signatories revision ("Rev. 0"
+      // until the Lead Auditor revises the approved plan); same height as before.
       kids.add(pw.SizedBox(height: spec.showBox ? _kSigGap : 10));
+      kids.add(pw.Container(
+        height: _kRevLineH,
+        alignment: pw.Alignment.centerLeft,
+        padding: const pw.EdgeInsets.only(left: _kSigPadL),
+        child: pw.Text('Rev. ${data.signatoryRevision}',
+            style: _st(bold: true, size: 8.5)),
+      ));
+      kids.add(pw.SizedBox(height: _kRevGapBelow));
       kids.add(_signatureBlock());
     }
 
@@ -1601,7 +1631,20 @@ class _PlanPdfBuilder {
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.end,
         children: [
-          pw.Expanded(child: pw.SizedBox()),
+          // "Rev. N" is on every page: here on every page but the last, and
+          // above the signatures on the last one.
+          pw.Expanded(
+            child: pw.Align(
+              alignment: pw.Alignment.centerLeft,
+              child: isLast
+                  ? pw.SizedBox()
+                  : pw.Padding(
+                      padding: const pw.EdgeInsets.only(left: _kSigPadL),
+                      child: pw.Text('Rev. ${data.signatoryRevision}',
+                          style: _st(bold: true, size: 8.5)),
+                    ),
+            ),
+          ),
           pw.Expanded(
             child: pw.Center(
               child: pw.Text('${idx + 1}', style: _st(bold: true)),

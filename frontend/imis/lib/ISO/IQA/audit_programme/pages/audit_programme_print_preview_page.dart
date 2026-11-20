@@ -12,6 +12,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:imis/ISO/IQA/audit_programme/models/audit_programme.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/pdf_download.dart';
@@ -134,6 +135,7 @@ class _Data {
     required this.rosters,
     required this.signatories,
     required this.revision,
+    this.signatoryRevision = 0,
   });
 
   final String forText;
@@ -155,6 +157,11 @@ class _Data {
   final Map<int, List<String>> rosters;
   final List<_Sig> signatories;
   final int revision;
+
+  /// How many times the Lead Auditor re-opened the approved programme so its
+  /// signatories had to sign again (0 = the original signing). Printed as
+  /// "Rev. N" just above the signatures.
+  final int signatoryRevision;
 }
 
 class _PdfAssets {
@@ -245,8 +252,15 @@ _Sig _preparerOf(AuditProgramme programme) {
   const heading = 'Prepared by:';
   const role = 'IQA Lead Auditor';
 
+  // After the Lead Auditor revised the approved programme, only a submission
+  // made since then counts: the chain is signed again, so nobody has prepared
+  // this revision until it is submitted.
+  final revisedAt = SignatoryRevision.latest(programme.approvalHistory)?.actionDate;
   final submits = programme.approvalHistory
-      .where((h) => h.action.toLowerCase().startsWith('submit'))
+      .where((h) =>
+          (h.action.toLowerCase().startsWith('submit') ||
+              h.action.toLowerCase() == 'resubmitted') &&
+          (revisedAt == null || h.actionDate.isAfter(revisedAt)))
       .toList()
     ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
   if (submits.isNotEmpty) {
@@ -561,6 +575,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
     teamNames: teamNames,
     rosters: rosters,
     signatories: _buildSignatories(programme, _preparerOf(programme)),
+    signatoryRevision: SignatoryRevision.count(programme.approvalHistory),
   );
 }
 
@@ -1393,7 +1408,20 @@ class _ProgrammePdfBuilder {
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.end,
         children: [
-          pw.Expanded(child: pw.SizedBox()),
+          // "Rev. N" is on every page: here on every page but the last, and
+          // above the signatures on the last one.
+          pw.Expanded(
+            child: pw.Align(
+              alignment: pw.Alignment.centerLeft,
+              child: isLast
+                  ? pw.SizedBox()
+                  : pw.Padding(
+                      padding: const pw.EdgeInsets.only(left: 22),
+                      child: _t('Rev. ${data.signatoryRevision}',
+                          bold: true, size: 8.5),
+                    ),
+            ),
+          ),
           pw.Expanded(
             child: pw.Center(child: _t('${ctx.pageNumber}', size: 9)),
           ),
@@ -1462,8 +1490,26 @@ class _ProgrammePdfBuilder {
         _paragraphs(data.verification),
       ),
       _section('IX.', 'Audit Limitations', _paragraphs(data.limitations)),
-      pw.SizedBox(height: 26),
-      _signatureBlock(),
+      // The signatories revision ("Rev. 0" until the Lead Auditor revises the
+      // approved programme) sits just above the signatures.
+      // Same spacing as the Audit Plan: 16 above, the line, 8 below.
+      // One unsplittable group, so "Rev. N" always stays with the signatures
+      // (and is then the last page, which skips the footer's "Rev. N").
+      pw.Container(
+        width: _contentW,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.SizedBox(height: 16),
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(left: 22),
+              child: _t('Rev. ${data.signatoryRevision}', bold: true, size: 8.5),
+            ),
+            pw.SizedBox(height: 8),
+            _signatureBlock(),
+          ],
+        ),
+      ),
     ]);
     return w;
   }
