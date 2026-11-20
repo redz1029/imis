@@ -9,6 +9,7 @@ import 'package:imis/ISO/IQA/ncar/pages/ncar_form_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_monitoring_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
+import 'package:imis/ISO/IQA/ncar/widgets/ncar_same_day_rule.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -189,6 +190,32 @@ class _NcarListPageState extends State<NcarListPage> {
     }
   }
 
+  /// The step this NCAR is waiting on, when it is due today or overdue under
+  /// the same-day rule. Nothing for a closed NCAR or one that is on time.
+  Widget _pendingDeadline(NonconformingActionReport n) {
+    if (n.isClosed) return const SizedBox.shrink();
+
+    final String state;
+    final DateTime? due;
+    if (n.acknowledgedDate == null) {
+      state = n.acknowledgeState;
+      due = n.acknowledgeDueDate;
+    } else if (n.proposedDate == null) {
+      state = n.responseState;
+      due = n.responseDueDate;
+    } else if (n.verifiedDate == null) {
+      state = n.verificationState;
+      due = n.verificationDueDate;
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    if (state != NcarSameDayState.dueToday && state != NcarSameDayState.overdue) {
+      return const SizedBox.shrink();
+    }
+    return NcarDueChip(state: state, dueDate: due);
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -276,6 +303,8 @@ class _NcarListPageState extends State<NcarListPage> {
               ],
             ),
             const SizedBox(height: 6),
+            // Opens collapsed to one line here; the NCAR form opens it in full.
+            const NcarSameDayNotice(initiallyExpanded: false),
             IqaStatusTabs(
               tabs: IqaStatus.ncar,
               selected: _selectedFilter,
@@ -348,6 +377,8 @@ class _NcarListPageState extends State<NcarListPage> {
                                           ),
                                         ),
                                         const Spacer(),
+                                        _pendingDeadline(n),
+                                        const SizedBox(width: 10),
                                         Text(
                                           n.statusDisplay,
                                           style: TextStyle(

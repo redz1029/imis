@@ -5,6 +5,7 @@ import 'package:imis/ISO/IQA/ncar/dialogs/ncar_attachments_dialog.dart';
 import 'package:imis/ISO/IQA/ncar/models/nonconforming_action_report.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
+import 'package:imis/ISO/IQA/ncar/widgets/ncar_same_day_rule.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -443,6 +444,8 @@ class _NcarFormPageState extends State<NcarFormPage> {
     required String side,
     required Widget child,
     String? note,
+    // Where the step stands against the same-day rule (Due today / Overdue ...).
+    Widget? deadline,
   }) => Container(
     margin: const EdgeInsets.only(bottom: 16),
     padding: const EdgeInsets.all(16),
@@ -468,6 +471,7 @@ class _NcarFormPageState extends State<NcarFormPage> {
                 ),
               ),
             ),
+            if (deadline != null) ...[deadline, const SizedBox(width: 8)],
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -802,8 +806,12 @@ class _NcarFormPageState extends State<NcarFormPage> {
   Widget _acknowledgeCard(NonconformingActionReport n) => _card(
     title: '2. ACKNOWLEDGEMENT',
     side: 'AUDITEE',
+    deadline: NcarDueChip(
+      state: n.acknowledgeState,
+      dueDate: n.acknowledgeDueDate,
+    ),
     note: _canAcknowledge
-        ? 'The audited office confirms it received this NCAR.'
+        ? 'The audited office confirms it received this NCAR on the day it was issued.'
         : _acknowledged
         ? null
         : 'Waiting for the audited office to acknowledge.',
@@ -831,9 +839,13 @@ class _NcarFormPageState extends State<NcarFormPage> {
     return _card(
       title: '3. ROOT CAUSE ANALYSIS AND PROPOSED ACTIONS',
       side: 'AUDITEE',
+      deadline: NcarDueChip(
+        state: n.responseState,
+        dueDate: n.responseDueDate,
+      ),
       note: enabled
-          ? 'Written by the audited office. It can be changed until the '
-              'Department / Section Head approves it.'
+          ? 'Written by the audited office on the day the NCAR was issued. It can be '
+              'changed until the Department / Section Head approves it.'
           : !_acknowledged
           ? 'Open once the NCAR is acknowledged.'
           : _approved
@@ -903,8 +915,13 @@ class _NcarFormPageState extends State<NcarFormPage> {
     return _card(
       title: '5. VERIFICATION',
       side: 'AUDITOR',
+      deadline: NcarDueChip(
+        state: n.verificationState,
+        dueDate: n.verificationDueDate,
+      ),
       note: enabled
-          ? 'Written by the auditor after checking that the proposed actions were carried out.'
+          ? 'Written by the auditor, on the day the office wrote its response, after checking '
+              'that the proposed actions were carried out.'
           : !_approved
           ? 'Open once the proposed actions are approved.'
           : _closed
@@ -1044,6 +1061,7 @@ class _NcarFormPageState extends State<NcarFormPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                const NcarSameDayNotice(),
                                 _headerCard(n),
                                 _issuanceCard(n),
                                 _acknowledgeCard(n),

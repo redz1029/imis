@@ -53,6 +53,17 @@ class NonconformingActionReport {
   /// Service, ...). Worked out by the server, so it is read-only here.
   final List<String> services;
 
+  /// The same-day rule, worked out by the server (read-only, never sent back):
+  /// the office acknowledges and writes its root cause analysis and proposed
+  /// actions on the day the NCAR was issued; the auditor verifies on the day
+  /// the office wrote them. A state is one of the [NcarSameDayState] values.
+  final DateTime? acknowledgeDueDate;
+  final String acknowledgeState;
+  final DateTime? responseDueDate;
+  final String responseState;
+  final DateTime? verificationDueDate;
+  final String verificationState;
+
   const NonconformingActionReport({
     this.id = 0,
     required this.referenceNumber,
@@ -98,6 +109,12 @@ class NonconformingActionReport {
     this.corrections = const [],
     this.correctiveActions = const [],
     this.services = const [],
+    this.acknowledgeDueDate,
+    this.acknowledgeState = NcarSameDayState.notYet,
+    this.responseDueDate,
+    this.responseState = NcarSameDayState.notYet,
+    this.verificationDueDate,
+    this.verificationState = NcarSameDayState.notYet,
   });
 
   factory NonconformingActionReport.fromJson(Map<String, dynamic> json) {
@@ -181,6 +198,12 @@ class NonconformingActionReport {
             : const [])
           if (s != null && s.toString().trim().isNotEmpty) s.toString().trim(),
       ],
+      acknowledgeDueDate: parseOptDt(json['acknowledgeDueDate'] ?? json['AcknowledgeDueDate']),
+      acknowledgeState: (json['acknowledgeState'] ?? json['AcknowledgeState'] ?? NcarSameDayState.notYet).toString(),
+      responseDueDate: parseOptDt(json['responseDueDate'] ?? json['ResponseDueDate']),
+      responseState: (json['responseState'] ?? json['ResponseState'] ?? NcarSameDayState.notYet).toString(),
+      verificationDueDate: parseOptDt(json['verificationDueDate'] ?? json['VerificationDueDate']),
+      verificationState: (json['verificationState'] ?? json['VerificationState'] ?? NcarSameDayState.notYet).toString(),
     );
   }
 
@@ -260,6 +283,24 @@ class NonconformingActionReport {
     if (isActive) return NcarStatus.active;
     return NcarStatus.pendingVerification;
   }
+}
+
+/// How a step stands against the same-day rule (as worked out by the server).
+class NcarSameDayState {
+  /// Nothing to measure yet (the step before it is not done).
+  static const String notYet = 'NotYet';
+
+  /// Done on or before its day.
+  static const String met = 'Met';
+
+  /// Done, but after its day.
+  static const String late = 'Late';
+
+  /// Not done yet and still today.
+  static const String dueToday = 'DueToday';
+
+  /// Not done and its day has passed.
+  static const String overdue = 'Overdue';
 }
 
 /// The NCAR lifecycle statuses accepted by the backend.
