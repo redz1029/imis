@@ -58,6 +58,7 @@ namespace IMIS.Application.IqaNotificationModule
             public const string NcarRaised = "NcarRaised";
             public const string NcarAcknowledged = "NcarAcknowledged";
             public const string NcarResponded = "NcarResponded";
+            public const string NcarVerifyDue = "NcarVerifyDue";
             public const string NcarApproved = "NcarApproved";
             public const string NcarVerified = "NcarVerified";
             public const string NcarClosed = "NcarClosed";

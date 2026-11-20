@@ -367,7 +367,8 @@ namespace IMIS.Persistence.NonconformingActionReportModule
 
             await NotifyAsync(entity, userId, IqaNotifier.Types.NcarAcknowledged,
                 "NCAR acknowledged",
-                "{who} acknowledged NCAR {ref}. The office will now write its response.",
+                "{who} acknowledged NCAR {ref}. The office will now write its root cause analysis and proposed actions."
+                    + DueSentence(" Same-day rule: due ", NcarSameDayRule.ResponseDay(entity.IssuedDate)),
                 new[] { entity.IssuedByAuditorUserId }, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
@@ -418,8 +419,16 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             var heads = await IqaNotifier.OfficeHeadsByNameAsync(dbContext, entity.Office, cancellationToken).ConfigureAwait(false);
             await NotifyAsync(entity, userId, IqaNotifier.Types.NcarResponded,
                 "NCAR response waiting for your approval",
-                "{who} wrote the root causes and proposed actions for NCAR {ref}. Please approve them.",
+                "{who} wrote the root cause analysis and proposed actions for NCAR {ref}. Please approve them today so the auditor can verify what was observed on the same day.",
                 heads, cancellationToken).ConfigureAwait(false);
+
+            // The auditor who issued it must verify what was observed the same day.
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarVerifyDue,
+                "NCAR response written - verify what was observed",
+                "The office wrote the root cause analysis and proposed actions of NCAR {ref}."
+                    + DueSentence(" Same-day rule: verify what was observed, due ", NcarSameDayRule.VerificationDay(entity.ProposedDate))
+                    + " You can verify once the Department / Section Head approves the actions.",
+                new[] { entity.IssuedByAuditorUserId }, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
 
@@ -447,7 +456,8 @@ namespace IMIS.Persistence.NonconformingActionReportModule
 
             await NotifyAsync(entity, userId, IqaNotifier.Types.NcarApproved,
                 "NCAR actions approved - ready to verify",
-                "{who} approved the proposed actions of NCAR {ref}. Verify that they were carried out.",
+                "{who} approved the proposed actions of NCAR {ref}. Verify that they were carried out and write what was observed."
+                    + DueSentence(" Same-day rule: due ", NcarSameDayRule.VerificationDay(entity.ProposedDate)),
                 new[] { entity.IssuedByAuditorUserId, entity.ProposedByAuditeeUserId }, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
@@ -535,6 +545,10 @@ namespace IMIS.Persistence.NonconformingActionReportModule
         // Notifications (the IQA bell). Raised once the step is saved; a failure
         // here never fails the step. "{who}" and "{ref}" are filled in here.
         // ------------------------------------------------------------------
+
+        /// <summary>" Same-day rule: due today (November 20, 2026)." — empty when the day is unknown.</summary>
+        private static string DueSentence(string prefix, DateTime? day) =>
+            day == null ? string.Empty : $"{prefix}{NcarSameDayRule.When(day.Value)}.";
 
         private async Task NotifyAsync(
             NonconformingActionReport ncar, string actorUserId, string type, string title, string message,

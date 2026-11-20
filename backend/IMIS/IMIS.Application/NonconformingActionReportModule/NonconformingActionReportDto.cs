@@ -77,6 +77,18 @@ namespace IMIS.Application.NonconformingActionReportModule
         public bool IsClosed { get; set; } = false;
         public string FormRevision { get; set; } = "QP-03-F-08 Rev. 5";
 
+        // The same-day rule (see NcarSameDayRule). Read-only: worked out from the
+        // dates above every time the NCAR is read, never saved. The days are
+        // Philippine calendar days (midnight); the states are NcarSameDayRule.States.
+        // Acknowledge + write the response: the day the NCAR was issued.
+        // Verify: the day the office wrote its response.
+        public DateTime? AcknowledgeDueDate { get; set; }
+        public string AcknowledgeState { get; set; } = NcarSameDayRule.States.NotYet;
+        public DateTime? ResponseDueDate { get; set; }
+        public string ResponseState { get; set; } = NcarSameDayRule.States.NotYet;
+        public DateTime? VerificationDueDate { get; set; }
+        public string VerificationState { get; set; } = NcarSameDayRule.States.NotYet;
+
         /// <summary>
         /// The Service(s) the audited office belongs to (e.g. "Medical Service",
         /// "Nursing Service"), found by following the office up its parents.
@@ -139,6 +151,23 @@ namespace IMIS.Application.NonconformingActionReportModule
             IsActive = entity.IsActive;
             IsClosed = entity.IsClosed;
             FormRevision = entity.FormRevision;
+
+            AcknowledgeDueDate = NcarSameDayRule.ResponseDay(entity.IssuedDate);
+            AcknowledgeState = NcarSameDayRule.StateOf(AcknowledgeDueDate, entity.AcknowledgedDate);
+            ResponseDueDate = AcknowledgeDueDate;
+            ResponseState = NcarSameDayRule.StateOf(ResponseDueDate, entity.ProposedDate);
+            VerificationDueDate = NcarSameDayRule.VerificationDay(entity.ProposedDate);
+            VerificationState = NcarSameDayRule.StateOf(VerificationDueDate, entity.VerifiedDate);
+            if (entity.IsClosed)
+            {
+                // A closed NCAR has nothing left to chase (older rows may lack a step's date).
+                if (AcknowledgeState is NcarSameDayRule.States.DueToday or NcarSameDayRule.States.Overdue)
+                    AcknowledgeState = NcarSameDayRule.States.NotYet;
+                if (ResponseState is NcarSameDayRule.States.DueToday or NcarSameDayRule.States.Overdue)
+                    ResponseState = NcarSameDayRule.States.NotYet;
+                if (VerificationState is NcarSameDayRule.States.DueToday or NcarSameDayRule.States.Overdue)
+                    VerificationState = NcarSameDayRule.States.NotYet;
+            }
 
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;

@@ -1,5 +1,6 @@
 using IMIS.Application.AuditChecklistModule;
 using IMIS.Application.IqaNotificationModule;
+using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -189,8 +190,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                 await IqaNotifier.AddAsync(
                     _dbContext, recipients, issuerUserId,
                     IqaNotifier.Types.NcarRaised,
-                    "NCAR raised for your office",
-                    $"{who} raised NCAR {ncar.ReferenceNumber} for {source.OfficeName} on clause {source.ClauseRef}. Please acknowledge it.",
+                    "NCAR raised for your office - respond today",
+                    $"{who} raised NCAR {ncar.ReferenceNumber} for {source.OfficeName} on clause {source.ClauseRef}. " +
+                    $"Same-day rule: acknowledge it {NcarSameDayRule.When(NcarSameDayRule.DayOf(ncar.IssuedDate ?? DateTime.UtcNow))} " +
+                    "and, on the same day, write the root cause analysis and the proposed actions.",
                     IqaNotifier.Entities.Ncar, ncar.Id, IqaNotifier.Pages.Ncar, cancellationToken).ConfigureAwait(false);
                 await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken).ConfigureAwait(false);
             }
