@@ -302,6 +302,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   AuditProgramme? _loadedProgramme;
   UserRegistration? _currentUser;
   bool _isAdmin = false;
+  bool _isLeadAuditor = false;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -400,6 +401,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     try {
       _currentUser = await AuthUtil.fetchLoggedUser();
       _isAdmin = await AuthUtil.isCurrentUserAdmin();
+      _isLeadAuditor = await AuthUtil.isCurrentUserLeadAuditor();
       await Future.wait([
         _fetchMasterOffices(),
         _fetchMasterIsoStandards(),
@@ -968,6 +970,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               _hasPermission(AppPermissions.auditProgrammeSubmitForApproval) ||
               sigLabel.contains('SUBMIT');
 
+          // Only the Lead Auditor can re-open an APPROVED programme; its
+          // signatories then sign it again under the next signatories revision.
+          final canRevise = isEdit && _isLeadAuditor && status == 'Approved';
+
           final leftActions = Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1008,6 +1014,34 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                     ),
                   ),
                 ),
+                if (canRevise) ...[
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _isSaving ? null : _handleRevise,
+                    icon: Icon(
+                      Icons.edit_note,
+                      size: 18,
+                      color: Colors.orange.shade800,
+                    ),
+                    label: Text(
+                      'REVISE',
+                      style: TextStyle(
+                        color: Colors.orange.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.orange.shade800),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ],
                 if (canSaveDraft) ...[
                 const SizedBox(width: 8),
                 OutlinedButton(
@@ -1198,6 +1232,39 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         },
       ),
     );
+  }
+
+  Future<void> _handleRevise() async {
+    if (widget.programmeId == null) return;
+    final reason = await RevisionDialog.show(
+      context,
+      title: 'Revise Audit Programme',
+      subtitle:
+          'The approved programme is re-opened so you can change it. Its '
+          'signatories will have to sign it again, as the next signatories revision.',
+    );
+    if (reason == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      await _service.reviseAuditProgramme(widget.programmeId!, reason: reason);
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'Audit Programme reopened. Make your changes and submit it for approval again.',
+        ),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Future<void> _handleReject() async {

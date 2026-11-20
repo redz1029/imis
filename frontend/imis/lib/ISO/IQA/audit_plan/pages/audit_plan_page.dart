@@ -1082,6 +1082,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   AuditPlan? _loadedPlan;
   UserRegistration? _currentUser;
   bool _isAdmin = false;
+  bool _isLeadAuditor = false;
   bool _isSaving = false;
 
   /// True when the signed-in role holds [permission] (Administrators always
@@ -1209,6 +1210,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     try {
       _currentUser = await AuthUtil.fetchLoggedUser();
       _isAdmin = await AuthUtil.isCurrentUserAdmin();
+      _isLeadAuditor = await AuthUtil.isCurrentUserLeadAuditor();
       await Future.wait([
         _fetchMasterOffices(),
         _fetchMasterIsoStandards(),
@@ -1725,6 +1727,39 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     }
   }
 
+  Future<void> _handleRevise() async {
+    if (widget.auditPlanId == null) return;
+    final reason = await RevisionDialog.show(
+      context,
+      title: 'Revise Audit Plan',
+      subtitle:
+          'The approved plan is re-opened so you can change it. Its '
+          'signatories will have to sign it again, as the next signatories revision.',
+    );
+    if (reason == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      await _auditPlanService.reviseAuditPlan(widget.auditPlanId!, reason: reason);
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'Audit Plan reopened. Make your changes and submit it for approval again.',
+        ),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   Future<void> _handleReject() async {
     if (widget.auditPlanId == null) return;
     final reason = await RejectionDialog.show(
@@ -1990,6 +2025,11 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         sigLabel.contains('SUBMIT');
     final canSaveDraft = _isAdmin || _hasPermission(AppPermissions.addAuditPlan);
 
+    // Only the Lead Auditor can re-open an APPROVED plan; its signatories then
+    // sign it again under the next signatories revision.
+    final canRevise =
+        widget.auditPlanId != null && _isLeadAuditor && status == 'Approved';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -2031,6 +2071,34 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: primaryThemeColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (canRevise) ...[
+                OutlinedButton.icon(
+                  onPressed: _isSaving ? null : _handleRevise,
+                  icon: Icon(
+                    Icons.edit_note,
+                    size: 18,
+                    color: Colors.orange.shade800,
+                  ),
+                  label: Text(
+                    'REVISE',
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.orange.shade800),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,

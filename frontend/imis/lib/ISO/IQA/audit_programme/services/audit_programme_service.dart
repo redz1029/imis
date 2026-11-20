@@ -364,6 +364,22 @@ class AuditProgrammeService {
     }
   }
 
+  /// The Lead Auditor re-opens an APPROVED programme so it can be changed and
+  /// signed again, via `PUT /auditProgramme/{id}/revise`.
+  Future<void> reviseAuditProgramme(int id, {required String reason}) async {
+    final url = '${ApiEndpoint().auditProgramme}/$id/revise';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {'reason': reason},
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to revise audit programme.'),
+      );
+    }
+  }
+
   /// Download PDF Report by ID from `/auditProgramme/PdF/{id}`
   Future<Uint8List> getPdfReport(int id) async {
     final url = '${ApiEndpoint().auditProgramme}/PdF/$id';

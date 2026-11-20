@@ -104,6 +104,32 @@ class IQAApprovalHistory {
   }
 }
 
+/// The signatories revision of an Audit Programme / Plan.
+///
+/// Each time the Lead Auditor re-opens the APPROVED form so its signatories
+/// must sign again, a "Revised" row is added to its approval history. The
+/// number of those rows is the revision (0 = the original signing). This is
+/// separate from the form's own `revision` (the "QP-03-F-04 Rev. 0" code).
+class SignatoryRevision {
+  static const String action = 'Revised';
+
+  /// How many times the form was revised.
+  static int count(Iterable<IQAApprovalHistory> history) =>
+      history.where(_isRevision).length;
+
+  /// The latest "Revised" row, or null when the form was never revised.
+  static IQAApprovalHistory? latest(Iterable<IQAApprovalHistory> history) {
+    IQAApprovalHistory? last;
+    for (final h in history.where(_isRevision)) {
+      if (last == null || h.actionDate.isAfter(last.actionDate)) last = h;
+    }
+    return last;
+  }
+
+  static bool _isRevision(IQAApprovalHistory h) =>
+      h.action.toLowerCase() == action.toLowerCase();
+}
+
 class RejectionDetails {
   final String? rejectedBy;
   final String? rejectedByUserId;

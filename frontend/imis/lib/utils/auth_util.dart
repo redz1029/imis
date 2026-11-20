@@ -137,6 +137,21 @@ class AuthUtil {
     return roles.any((role) => role.name == PermissionRoleString.roleAdmin);
   }
 
+  /// True when the signed-in role is Lead Auditor. Same rule as
+  /// [isCurrentUserAdmin]: the role picked at login wins, else any role held.
+  static Future<bool> isCurrentUserLeadAuditor() async {
+    final sharedPref = await SharedPreferences.getInstance();
+
+    final selectedRole = sharedPref.getString(selectedRoleKey);
+    if (selectedRole != null) {
+      return selectedRole == PermissionRoleString.leadAuditor;
+    }
+
+    final roles = await fetchRoles();
+    if (roles == null || roles.isEmpty) return false;
+    return roles.any((role) => role.name == PermissionRoleString.leadAuditor);
+  }
+
   static Future<void> saveSelectedOfficeId(String officeId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(selectedOfficeIdKey, officeId);

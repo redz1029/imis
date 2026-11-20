@@ -311,4 +311,20 @@ class AuditPlanService {
       );
     }
   }
+
+  /// The Lead Auditor re-opens an APPROVED plan so it can be changed and
+  /// signed again, via `PUT /auditPlan/{id}/revise`.
+  Future<void> reviseAuditPlan(int id, {required String reason}) async {
+    final url = '$_auditPlanBaseUrl/$id/revise';
+    final response = await AuthenticatedRequest.put(
+      _dio,
+      url,
+      data: {'reason': reason},
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to revise audit plan.'),
+      );
+    }
+  }
 }

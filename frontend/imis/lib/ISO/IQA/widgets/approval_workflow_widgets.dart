@@ -147,6 +147,148 @@ class _RejectionDialogState extends State<RejectionDialog> {
   }
 }
 
+/// Modal dialog for the Lead Auditor to revise an APPROVED Audit Programme /
+/// Plan. Asks for the reason and returns it, or null when cancelled.
+class RevisionDialog extends StatefulWidget {
+  final String title;
+  final String subtitle;
+
+  const RevisionDialog({super.key, required this.title, required this.subtitle});
+
+  static Future<String?> show(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+  }) {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => RevisionDialog(title: title, subtitle: subtitle),
+    );
+  }
+
+  @override
+  State<RevisionDialog> createState() => _RevisionDialogState();
+}
+
+class _RevisionDialogState extends State<RevisionDialog> {
+  final _reasonController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Row(
+        children: [
+          Icon(Icons.edit_note, color: Colors.orange.shade800, size: 24),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              widget.title,
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Form(
+        key: _formKey,
+        child: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.subtitle,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Reason for Revision *',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextFormField(
+                controller: _reasonController,
+                maxLines: 4,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'What needs to change?',
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: Colors.grey.shade400,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.orange.shade800),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return 'Please enter the reason for the revision.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade800,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          ),
+          onPressed: () {
+            if (_formKey.currentState?.validate() == true) {
+              Navigator.pop(context, _reasonController.text.trim());
+            }
+          },
+          child: Text(
+            'Revise',
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Modal dialog displaying full approval and rejection history.
 class ApprovalHistoryDialog extends StatelessWidget {
   final String title;
@@ -182,6 +324,8 @@ class ApprovalHistoryDialog extends StatelessWidget {
       case 'submitted':
       case 'resubmitted':
         return Colors.indigo.shade600;
+      case 'revised':
+        return Colors.orange.shade800;
       default:
         return Colors.grey.shade700;
     }
