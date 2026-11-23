@@ -6,5 +6,6 @@ namespace IMIS.Domain
     {
         public int? Numbering { get; set; }
         public string? Sequence { get; set; }
+        public bool? IsFlowChart { get; set; }
     }
 }

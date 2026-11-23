@@ -8,6 +8,7 @@ namespace IMIS.Application.PolicyAndProcedureSectionNumberingModule
     {
         public int? Numbering { get; set; }
         public string? Sequence { get; set; }
+        public bool? IsFlowChart { get; set; }
        
 
         public PolicyAndProcedureSectionNumberingDto() { }
@@ -18,6 +19,7 @@ namespace IMIS.Application.PolicyAndProcedureSectionNumberingModule
             this.Id = policyAndProcedure.Id;
             this.Numbering = policyAndProcedure.Numbering;
             this.Sequence = policyAndProcedure.Sequence;
+            this.IsFlowChart = policyAndProcedure.IsFlowChart;
             
         }
 
@@ -28,6 +30,7 @@ namespace IMIS.Application.PolicyAndProcedureSectionNumberingModule
                 Id = Id,
                 Numbering = Numbering,
                 Sequence = Sequence,
+                IsFlowChart = IsFlowChart,
               
             };
         }
