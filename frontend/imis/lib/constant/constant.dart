@@ -58,6 +58,21 @@ const gap60px = SizedBox(height: 60);
 const gap32w = SizedBox(width: 50);
 const kAccentDark = Color(0xFF8B3A4A);
 
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 // Job Posiitons
 class JobPositions {
   static const List<String> positions = [
