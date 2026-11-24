@@ -199,8 +199,31 @@ List<_Group> _groupByOffice(List<AuditPlanEntry> entries) {
   return list;
 }
 
+/// The preparer of a schedule is the Team Leader who submitted it for the
+/// auditee's confirmation. The schedule has no signatory row for the preparer
+/// (only the auditee / head of office signs), so the name and date come from the
+/// approval history: the latest "Submitted" / "Resubmitted" entry. Until it is
+/// submitted nobody has prepared it, so the block stays blank.
+_Sig? _preparerOf(AuditSchedules? schedule) {
+  final submits = (schedule?.approvalHistory ?? const [])
+      .where((h) {
+        final a = h.action.toLowerCase();
+        return a.startsWith('submit') || a == 'resubmitted';
+      })
+      .toList()
+    ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
+  if (submits.isEmpty) return null;
+
+  final last = submits.last;
+  final name = last.effectiveUserName.trim();
+  if (name.isEmpty) return null;
+  return _Sig('PREPARED BY:', name, 'Team Leader', _signedLocal(last.actionDate));
+}
+
 List<_Sig> _buildSignatories(AuditSchedules? schedule) {
-  _Sig? prepared;
+  // A preparer row, if the schedule ever carries one, is only a fallback: the
+  // person who actually submitted the schedule wins.
+  _Sig? prepared = _preparerOf(schedule);
   _Sig? approved;
 
   for (final s in schedule?.signatories ?? const []) {
@@ -977,13 +1000,10 @@ class _SchedulePdfBuilder {
   }
 
   // ------------------------------------------------------------ signatures ---
-  pw.Widget _sigColumn(_Sig s, double colW, {required bool longDate}) {
-    String dateText = '';
-    if (s.date != null) {
-      dateText = longDate
-          ? DateFormat('MMMM d, yyyy').format(s.date!).toUpperCase()
-          : DateFormat('M/d/yyyy').format(s.date!);
-    }
+  pw.Widget _sigColumn(_Sig s, double colW) {
+    // Both signatories print their date the same way, e.g. 11/3/2026.
+    final dateText =
+        s.date == null ? '' : DateFormat('M/d/yyyy').format(s.date!);
     return pw.Padding(
       padding: const pw.EdgeInsets.fromLTRB(5, 4, 5, 4),
       child: pw.Column(
@@ -1045,12 +1065,12 @@ class _SchedulePdfBuilder {
                 right: _bs,
               ),
             ),
-            child: _sigColumn(sigs[0], colW, longDate: true),
+            child: _sigColumn(sigs[0], colW),
           ),
           pw.SizedBox(
             width: _contentW - colW - 2 * _kBorderW,
             child: sigs.length > 1
-                ? _sigColumn(sigs[1], colW, longDate: false)
+                ? _sigColumn(sigs[1], colW)
                 : null,
           ),
         ],
