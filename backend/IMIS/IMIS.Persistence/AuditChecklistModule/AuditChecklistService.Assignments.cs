@@ -390,13 +390,18 @@ namespace IMIS.Persistence.AuditChecklistModule
             // Clauses newly given to an auditor (not ones that stay as they were),
             // so each auditor is told only about what changed for them.
             var newlyAssigned = new List<(int AuditorId, long IsoStandardId)>();
+            var unassigned = new List<long>();
             foreach (var (isoStandardId, auditorId) in requested)
             {
                 var current = tracked.FirstOrDefault(a => a.IsoStandardId == isoStandardId);
 
                 if (!auditorId.HasValue)
                 {
-                    if (current != null) current.IsDeleted = true;
+                    if (current != null)
+                    {
+                        current.IsDeleted = true;
+                        unassigned.Add(isoStandardId);
+                    }
                     continue;
                 }
 
@@ -431,8 +436,80 @@ namespace IMIS.Persistence.AuditChecklistModule
                 return (false, "The assignments were changed by someone else. Please refresh and try again.");
             }
 
+            await RecordAssignmentAsync(ctx, auditScheduleId, newlyAssigned, unassigned, userId, cancellationToken).ConfigureAwait(false);
             await NotifyAssignedAuditorsAsync(ctx, auditScheduleId, newlyAssigned, userId, cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        // ------------------------------------------------------------------
+        // History: the permanent "who did what, when" trail of the checklist of
+        // one audit schedule. It is written after the action has been saved and
+        // can never fail it.
+        // ------------------------------------------------------------------
+
+        private static string HistoryRoleOf(AssignmentContext? ctx) =>
+            ctx == null ? string.Empty
+            : ctx.IsAdmin ? "Administrator"
+            : ctx.IsLeader ? "Team Leader"
+            : "Auditor";
+
+        private static string ClauseText(string? clauseRef) =>
+            string.IsNullOrWhiteSpace(clauseRef) ? "a clause" : $"clause {clauseRef.Trim()}";
+
+        private static string Shorten(string? text, int max = 200)
+        {
+            var t = NormalizeQuestion(text);
+            return t.Length <= max ? t : t.Substring(0, max - 1).TrimEnd() + "…";
+        }
+
+        private async Task RecordChecklistHistoryAsync(
+            int auditScheduleId, string action, string? userId, string? comments, string? role,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await IqaHistoryLog.AddAsync(
+                    _dbContext, IqaHistoryLog.EntityTypes.AuditChecklist, auditScheduleId,
+                    action, action, userId, comments, null, role, cancellationToken).ConfigureAwait(false);
+                await IqaHistoryLog.SaveSafelyAsync(_dbContext, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // the history must never fail the action
+            }
+        }
+
+        private async Task RecordAssignmentAsync(
+            AssignmentContext ctx, int auditScheduleId,
+            List<(int AuditorId, long IsoStandardId)> assigned, List<long> unassigned,
+            string? userId, CancellationToken cancellationToken)
+        {
+            if (assigned.Count == 0 && unassigned.Count == 0) return;
+
+            try
+            {
+                string ClauseOf(long isoStandardId) =>
+                    ClauseText(ctx.PlanClauses.FirstOrDefault(c => c.IsoStandardId == isoStandardId)?.IsoStandard?.ClauseRef);
+
+                var lines = new List<string>();
+                foreach (var group in assigned.GroupBy(a => a.AuditorId))
+                {
+                    var memberUserId = ctx.Members.FirstOrDefault(m => m.AuditorId == group.Key)?.UserId;
+                    var name = await IqaNotifier.NameOfAsync(_dbContext, memberUserId, cancellationToken).ConfigureAwait(false);
+                    var clauses = string.Join(", ", group.Select(a => ClauseOf(a.IsoStandardId)).Distinct());
+                    lines.Add($"Assigned {clauses} to {name}.");
+                }
+                if (unassigned.Count > 0)
+                    lines.Add($"Took back {string.Join(", ", unassigned.Select(ClauseOf).Distinct())}.");
+
+                await RecordChecklistHistoryAsync(
+                    auditScheduleId, IqaHistoryLog.Actions.ClausesAssigned, userId,
+                    string.Join(" ", lines), HistoryRoleOf(ctx), cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // the history must never fail the assignment
+            }
         }
 
         /// <summary>Tells each auditor which clauses were given to them. Never fails the assignment.</summary>
@@ -670,6 +747,11 @@ namespace IMIS.Persistence.AuditChecklistModule
             });
 
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await RecordChecklistHistoryAsync(
+                auditScheduleId, IqaHistoryLog.Actions.QuestionAdded, userId,
+                $"For {ClauseText(clause.IsoStandard?.ClauseRef)}: \"{Shorten(question.Question)}\"",
+                HistoryRoleOf(ctx), cancellationToken).ConfigureAwait(false);
             return (true, null);
         }
 
@@ -698,6 +780,11 @@ namespace IMIS.Persistence.AuditChecklistModule
 
             row.IsDeleted = true;
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await RecordChecklistHistoryAsync(
+                auditScheduleId, IqaHistoryLog.Actions.QuestionRemoved, userId,
+                $"From {ClauseText(row.AuditChecklistQNA?.IsoStandard?.ClauseRef)}: \"{Shorten(row.AuditChecklistQNA?.Question)}\"",
+                HistoryRoleOf(ctx), cancellationToken).ConfigureAwait(false);
             return (true, null);
         }
 
@@ -772,6 +859,64 @@ namespace IMIS.Persistence.AuditChecklistModule
         }
 
         private async Task<(bool Success, string? Error)> SaveChecklistRowForUserAsync(
+            AuditChecklistDto dto, string? userId, CancellationToken cancellationToken)
+        {
+            // What the row held before this save, to log only a real change.
+            var before = dto.Id > 0
+                ? await _dbContext.Set<AuditChecklist>()
+                    .AsNoTracking()
+                    .Where(c => c.Id == dto.Id && !c.IsDeleted)
+                    .Select(c => new
+                    {
+                        c.AuditScheduleId,
+                        c.Conforming,
+                        c.FindingType,
+                        c.FindingAndRemarks,
+                        ClauseRef = c.AuditChecklistQNA!.IsoStandard!.ClauseRef,
+                        Question = c.AuditChecklistQNA!.Question
+                    })
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .ConfigureAwait(false)
+                : null;
+
+            var result = await SaveChecklistRowCoreAsync(dto, userId, cancellationToken).ConfigureAwait(false);
+            if (!result.Success || before == null) return result;
+
+            try
+            {
+                var newType = AuditChecklist.NormalizeFindingType(dto.Conforming, dto.FindingType);
+                var newRemarks = (dto.FindingAndRemarks ?? string.Empty).Trim();
+                var oldRemarks = (before.FindingAndRemarks ?? string.Empty).Trim();
+                if (dto.Conforming == before.Conforming &&
+                    newType == before.FindingType &&
+                    string.Equals(newRemarks, oldRemarks, StringComparison.Ordinal))
+                    return result;
+
+                var answer = dto.Conforming switch
+                {
+                    true => "Y (conforming)",
+                    false => newType == AuditChecklist.OpportunityType
+                        ? "N (opportunity for improvement)"
+                        : "N (nonconformity)",
+                    _ => "answer cleared"
+                };
+                var comment = $"{ClauseText(before.ClauseRef)}: {answer}.";
+                if (newRemarks.Length > 0) comment += $" Remarks: \"{Shorten(newRemarks)}\"";
+
+                var ctx = await LoadAssignmentContextAsync(before.AuditScheduleId, userId, cancellationToken).ConfigureAwait(false);
+                await RecordChecklistHistoryAsync(
+                    before.AuditScheduleId, IqaHistoryLog.Actions.Answered, userId, comment,
+                    HistoryRoleOf(ctx), cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // the history must never fail the save
+            }
+
+            return result;
+        }
+
+        private async Task<(bool Success, string? Error)> SaveChecklistRowCoreAsync(
             AuditChecklistDto dto, string? userId, CancellationToken cancellationToken)
         {
             var scheduleId = dto.AuditScheduleId;

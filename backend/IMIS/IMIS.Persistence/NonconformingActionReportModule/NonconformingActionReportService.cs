@@ -209,6 +209,74 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             return new NonconformingActionReportDto(entity);
         }
 
+        public async Task<List<IMIS.Application.IQASignatoryModule.IQAApprovalHistoryDto>> GetHistoryAsync(long ncarId, CancellationToken cancellationToken)
+        {
+            var ncar = await _repository.GetDbContext().Set<NonconformingActionReport>()
+                .AsNoTracking()
+                .Include(n => n.IssuedByAuditor)
+                .Include(n => n.AcknowledgedByAuditee)
+                .Include(n => n.ProposedByAuditee)
+                .Include(n => n.ApprovedByHead)
+                .Include(n => n.VerifiedByAuditor)
+                .Include(n => n.ValidatedByLeadAuditor)
+                .FirstOrDefaultAsync(n => n.Id == ncarId, cancellationToken)
+                .ConfigureAwait(false);
+            if (ncar == null || ncarId > int.MaxValue)
+                return new List<IMIS.Application.IQASignatoryModule.IQAApprovalHistoryDto>();
+
+            var rows = new List<(int Step, IQAApprovalHistory Row)>();
+
+            // A step done after its same-day deadline says so; one done in time says nothing.
+            static string? LateNote(DateTime? dueDay, DateTime? doneUtc) =>
+                dueDay.HasValue && NcarSameDayRule.StateOf(dueDay, doneUtc) == NcarSameDayRule.States.Late
+                    ? $"Done late: it was due {NcarSameDayRule.Format(dueDay.Value)}."
+                    : null;
+
+            void Add(int step, string action, string status, DateTime? when, string? userId, User? user,
+                     string? role, string? comments)
+            {
+                if (!when.HasValue) return;
+                rows.Add((step, new IQAApprovalHistory
+                {
+                    Id = 0,
+                    AuditEntityType = IqaNotifier.Entities.Ncar,
+                    AuditEntityId = (int)ncarId,
+                    Action = action,
+                    Status = status,
+                    UserId = userId,
+                    User = user,
+                    ActionDate = when.Value,
+                    Comments = string.IsNullOrWhiteSpace(comments) ? null : comments.Trim(),
+                    OfficeName = ncar.Office,
+                    RoleOrPosition = role
+                }));
+            }
+
+            var sameDay = NcarSameDayRule.ResponseDay(ncar.IssuedDate);
+            var verifyDay = NcarSameDayRule.VerificationDay(ncar.ProposedDate);
+
+            Add(1, "Issued", "Issued", ncar.IssuedDate, ncar.IssuedByAuditorUserId, ncar.IssuedByAuditor,
+                "Auditor", null);
+            Add(2, "Acknowledged", "Acknowledged", ncar.AcknowledgedDate, ncar.AcknowledgedByAuditeeUserId, ncar.AcknowledgedByAuditee,
+                "Auditee", LateNote(sameDay, ncar.AcknowledgedDate));
+            Add(3, "Responded", "Pending Approval", ncar.ProposedDate, ncar.ProposedByAuditeeUserId, ncar.ProposedByAuditee,
+                "Auditee", "Wrote the root cause analysis and the proposed actions. " + LateNote(sameDay, ncar.ProposedDate));
+            Add(4, "Approved", "Approved", ncar.ApprovedDate, ncar.ApprovedByHeadUserId, ncar.ApprovedByHead,
+                "Department / Section Head", "Approved the proposed actions.");
+            Add(5, "Verified", "Verified", ncar.VerifiedDate, ncar.VerifiedByAuditorUserId, ncar.VerifiedByAuditor,
+                "Auditor",
+                string.Join(" ", new[] { ncar.VerificationDetails, LateNote(verifyDay, ncar.VerifiedDate) }
+                    .Where(t => !string.IsNullOrWhiteSpace(t))));
+            Add(6, "Closed", "Closed", ncar.ValidatedDate, ncar.ValidatedByLeadAuditorUserId, ncar.ValidatedByLeadAuditor,
+                "Lead Auditor", "Validated the NCAR and closed it.");
+
+            return rows
+                .OrderBy(r => r.Row.ActionDate)
+                .ThenBy(r => r.Step)
+                .Select(r => new IMIS.Application.IQASignatoryModule.IQAApprovalHistoryDto(r.Row))
+                .ToList();
+        }
+
         public async Task<List<NcarAttachmentDto>> GetAttachmentsAsync(long ncarId, CancellationToken cancellationToken)
         {
             var rows = await _repository.GetDbContext().Set<NcarAttachment>()

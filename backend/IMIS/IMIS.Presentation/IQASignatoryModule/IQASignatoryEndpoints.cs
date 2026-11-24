@@ -90,6 +90,21 @@ namespace IMIS.Presentation.IQASignatoryModule
             })
             .CacheOutput(b => b.Expire(TimeSpan.FromMinutes(2)).Tag(_iqaSignatory));
 
+            // HISTORY — the permanent "who did what, when" trail of one audit
+            // entity (Programme, Plan, Schedule, Checklist or Report). Read live,
+            // never cached, so a step just taken shows at once.
+            group.MapGet("/history/{auditEntityType}/{auditEntityId:int}", async (
+                string auditEntityType,
+                int auditEntityId,
+                IIQAAuditSignatoryService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetHistoryAsync(auditEntityType, auditEntityId, cancellationToken)
+                    .ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .CacheOutput(builder => builder.NoCache(), true);
+
             // GET PAGINATED
             group.MapGet("/paginated", async (
                 [FromQuery] string auditEntityType,

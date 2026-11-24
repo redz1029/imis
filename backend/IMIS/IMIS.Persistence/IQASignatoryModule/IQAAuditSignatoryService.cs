@@ -244,7 +244,10 @@ namespace IMIS.Persistence.IQASignatoryModule
             }
 
             if (reportApprovers.Count > 0)
+            {
+                await RecordReportSubmissionAsync(auditEntityId, userId, cancellationToken);
                 await NotifyReportApproversAsync(auditEntityId, reportApprovers, userId, cancellationToken);
+            }
 
             return true;
         }
@@ -254,14 +257,106 @@ namespace IMIS.Persistence.IQASignatoryModule
         // through this service. They never fail the submission or the decision.
         // ------------------------------------------------------------------
 
-        private async Task<string> ReportOfficeAsync(int reportId, CancellationToken cancellationToken)
-        {
-            var office = await _dbContext.Set<AuditReport>()
+        private Task<string?> ReportOfficeNameAsync(int reportId, CancellationToken cancellationToken) =>
+            _dbContext.Set<AuditReport>()
                 .AsNoTracking()
                 .Where(r => r.Id == reportId)
                 .Select(r => r.OfficeAudited == null ? null : (r.OfficeAudited.Office != null ? r.OfficeAudited.Office.Name : r.OfficeAudited.ProcessName))
                 .FirstOrDefaultAsync(cancellationToken);
+
+        private async Task<string> ReportOfficeAsync(int reportId, CancellationToken cancellationToken)
+        {
+            var office = await ReportOfficeNameAsync(reportId, cancellationToken);
             return string.IsNullOrWhiteSpace(office) ? "" : $" of {office}";
+        }
+
+        // ------------------------------------------------------------------
+        // History (the "who did what, when" trail) of the Audit Report. Like the
+        // notifications, it is written after the action has been saved and can
+        // never fail the submission or the decision.
+        // ------------------------------------------------------------------
+
+        private async Task RecordReportSubmissionAsync(int reportId, string userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var before = await _dbContext.Set<IQAApprovalHistory>()
+                    .AsNoTracking()
+                    .AnyAsync(h => h.AuditEntityType == IqaHistoryLog.EntityTypes.AuditReport &&
+                                   h.AuditEntityId == reportId &&
+                                   (h.Action == IqaHistoryLog.Actions.Submitted || h.Action == IqaHistoryLog.Actions.Resubmitted),
+                              cancellationToken);
+                var office = await ReportOfficeNameAsync(reportId, cancellationToken);
+
+                await IqaHistoryLog.AddAsync(
+                    _dbContext, IqaHistoryLog.EntityTypes.AuditReport, reportId,
+                    before ? IqaHistoryLog.Actions.Resubmitted : IqaHistoryLog.Actions.Submitted,
+                    "Pending Approval", userId, null, office, "Preparer", cancellationToken);
+                await IqaHistoryLog.SaveSafelyAsync(_dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // the history must never fail the submission
+            }
+        }
+
+        private async Task RecordReportDecisionAsync(
+            int reportId, IQASignatoryDto signatory, bool approve, string? remarks,
+            bool stillPending, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var label = (signatory.SignatoryLabel ?? string.Empty).Trim();
+                var noted = label.Contains("NOTE", StringComparison.OrdinalIgnoreCase);
+                var acknowledged = label.Contains("ACKNOWLEDG", StringComparison.OrdinalIgnoreCase);
+                var office = await ReportOfficeNameAsync(reportId, cancellationToken);
+
+                string action, status;
+                if (!approve)
+                {
+                    action = IqaHistoryLog.Actions.Rejected;
+                    status = "Rejected";
+                }
+                else
+                {
+                    action = acknowledged ? IqaHistoryLog.Actions.Acknowledged
+                           : noted ? IqaHistoryLog.Actions.Noted
+                           : IqaHistoryLog.Actions.Approved;
+                    status = stillPending ? "Pending Approval" : "Approved";
+                }
+
+                await IqaHistoryLog.AddAsync(
+                    _dbContext, IqaHistoryLog.EntityTypes.AuditReport, reportId, action, status,
+                    signatory.SignatoryId, remarks, office,
+                    string.IsNullOrWhiteSpace(label) ? signatory.Position : label, cancellationToken);
+                await IqaHistoryLog.SaveSafelyAsync(_dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // the history must never fail the decision
+            }
+        }
+
+        /// <summary>
+        /// The permanent trail of one audit entity, oldest first. The Programme,
+        /// Plan and Schedule write theirs through the approval workflow; the Audit
+        /// Report and the Audit Checklist write theirs through <see cref="IqaHistoryLog"/>.
+        /// </summary>
+        public async Task<List<IQAApprovalHistoryDto>> GetHistoryAsync(
+            string auditEntityType, int auditEntityId, CancellationToken cancellationToken)
+        {
+            if (auditEntityId <= 0 || !IqaHistoryLog.IsReadable(auditEntityType))
+                return new List<IQAApprovalHistoryDto>();
+
+            var rows = await _dbContext.Set<IQAApprovalHistory>()
+                .AsNoTracking()
+                .Include(h => h.User)
+                .Where(h => h.AuditEntityType == auditEntityType && h.AuditEntityId == auditEntityId && !h.IsDeleted)
+                .OrderBy(h => h.ActionDate)
+                .ThenBy(h => h.Id)
+                .ToListAsync(cancellationToken);
+
+            return rows.Select(h => new IQAApprovalHistoryDto(h)).ToList();
         }
 
         private async Task NotifyReportApproversAsync(
@@ -364,6 +459,7 @@ namespace IMIS.Persistence.IQASignatoryModule
                 if (string.Equals(auditEntityType, IqaNotifier.Entities.AuditReport, StringComparison.Ordinal))
                 {
                     var stillPending = signatories.Any(s => s.Id != currentSig.Id && s.ApprovalStatus == "Pending");
+                    await RecordReportDecisionAsync(auditEntityId, currentSig, true, remarks, stillPending, cancellationToken);
                     await NotifyReportDecisionAsync(auditEntityId, signatoryId, true, remarks, stillPending, cancellationToken);
                 }
             }
@@ -390,7 +486,10 @@ namespace IMIS.Persistence.IQASignatoryModule
                 }
 
                 if (string.Equals(auditEntityType, IqaNotifier.Entities.AuditReport, StringComparison.Ordinal))
+                {
+                    await RecordReportDecisionAsync(auditEntityId, currentSig, false, remarks, false, cancellationToken);
                     await NotifyReportDecisionAsync(auditEntityId, signatoryId, false, remarks, false, cancellationToken);
+                }
             }
 
             return true;

@@ -133,6 +133,16 @@ namespace IMIS.Presentation.NonconformingActionReportModule
             .WithTags(_ncarTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanValidateAndClose));
 
+            // HISTORY — who issued, acknowledged, answered, approved, verified and closed it, and when
+            app.MapGet("/{id:long}/history", async (long id, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetHistoryAsync(id, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_ncarTag)
+            .WithMetadata(new OutputCacheAttribute { NoStore = true })
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
             // ATTACHMENTS — pictures proving the nonconformity was resolved (page 2 of the form)
             app.MapGet("/{id:long}/attachments", async (long id, INonconformingActionReportService service, CancellationToken cancellationToken) =>
             {

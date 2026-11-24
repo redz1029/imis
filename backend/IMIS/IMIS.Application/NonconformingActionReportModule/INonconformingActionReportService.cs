@@ -39,5 +39,10 @@ namespace IMIS.Application.NonconformingActionReportModule
         Task<List<NcarAttachmentDto>> GetAttachmentsAsync(long ncarId, CancellationToken cancellationToken);
         Task<(NcarAttachmentDto? Attachment, string? Error)> AddAttachmentAsync(long ncarId, string fileName, byte[] content, string? caption, CancellationToken cancellationToken);
         Task<bool> DeleteAttachmentAsync(long ncarId, long attachmentId, CancellationToken cancellationToken);
+
+        // The "who did what, when" trail of one NCAR, oldest first: issued,
+        // acknowledged, response written, approved, verified, validated and closed.
+        // It is read from the dates and names the NCAR already stores.
+        Task<List<IMIS.Application.IQASignatoryModule.IQAApprovalHistoryDto>> GetHistoryAsync(long ncarId, CancellationToken cancellationToken);
     }
 }

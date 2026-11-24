@@ -118,5 +118,14 @@ namespace IMIS.Application.IQASignatoryModule
             string auditEntityType,
             int auditEntityId,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The permanent "who did what, when" trail of one audit entity (Programme,
+        /// Plan, Schedule, Checklist or Report), oldest first.
+        /// </summary>
+        Task<List<IQAApprovalHistoryDto>> GetHistoryAsync(
+            string auditEntityType,
+            int auditEntityId,
+            CancellationToken cancellationToken);
     }
 }
