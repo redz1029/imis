@@ -13,6 +13,7 @@ PolicyProcedure _$PolicyProcedureFromJson(Map<String, dynamic> json) =>
       rowVersion: json['rowVersion'] as String?,
       numbering: (json['numbering'] as num).toInt(),
       sequence: json['sequence'] as String,
+      isFlowChart: json['isFlowChart'] as bool?,
     );
 
 Map<String, dynamic> _$PolicyProcedureToJson(PolicyProcedure instance) =>
@@ -22,4 +23,5 @@ Map<String, dynamic> _$PolicyProcedureToJson(PolicyProcedure instance) =>
       'rowVersion': instance.rowVersion,
       'numbering': instance.numbering,
       'sequence': instance.sequence,
+      'isFlowChart': instance.isFlowChart,
     };
