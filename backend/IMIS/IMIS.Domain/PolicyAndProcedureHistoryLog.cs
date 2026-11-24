@@ -7,6 +7,8 @@ namespace IMIS.Domain
         public long PolicyAndProcedureId { get; set; }
         public PolicyAndProcedure? PolicyAndProcedure { get; set; }
         public DateTime? Date { get; set; }
+        public bool? IsControlledCopy { get; set; }
+        public bool? IsMasterCopy { get; set; }
         public virtual ICollection<PolicyAndProcedureHistoryLogList> HistoryLogLists { get; set; } = new List<PolicyAndProcedureHistoryLogList>();
     }
 }

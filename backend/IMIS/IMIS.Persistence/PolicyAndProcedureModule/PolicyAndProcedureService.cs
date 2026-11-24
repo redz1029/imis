@@ -253,7 +253,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             return await BuildDtoAsync(await ReloadAsync(pap.Id, cancellationToken), cancellationToken);
         }
 
-        // ================= SUBMIT =================
+        // ================= SUBMIT =================     
         public async Task<PolicyAndProcedureDto> SubmitAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -298,13 +298,17 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             var isLastTemplateSignatory = current.PAPSignatoryTemplateId.HasValue && !hasRemainingSignatory;
 
+            var historyLog = EnsureHistoryLog(pap);
+
             if (isLastTemplateSignatory)
             {
                 pap.IsMasterCopy = true;
                 pap.IsControlledCopy = true;
+
+                historyLog.IsMasterCopy = true;
+                historyLog.IsControlledCopy = true;
             }
 
-            EnsureHistoryLog(pap);
             EnsureDCRRF(pap);
 
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);

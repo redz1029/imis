@@ -9,6 +9,8 @@ namespace IMIS.Application.PolicyAndProcedureHistoryLogModule
         public long PolicyAndProcedureId { get; set; }
         public string? TitleName { get; set; }
         public DateTime? Date { get; set; }
+        public bool? IsControlledCopy { get; set; }
+        public bool? IsMasterCopy { get; set; }
         public List<PolicyAndProcedureHistoryLogListDto> PolicyAndProcedureLogList { get; set; } = new();
 
         public PolicyAndProcedureHistoryLogDto() { }
@@ -20,6 +22,8 @@ namespace IMIS.Application.PolicyAndProcedureHistoryLogModule
             PolicyAndProcedureId = entity.PolicyAndProcedureId;
             TitleName = entity.PolicyAndProcedure?.Title; 
             Date = entity.Date;
+            IsControlledCopy = entity.IsControlledCopy;
+            IsMasterCopy = entity.IsMasterCopy;
             PolicyAndProcedureLogList = entity.HistoryLogLists?
                 .Where(x => !x.IsDeleted)
                 .Select(x => new PolicyAndProcedureHistoryLogListDto(x))
@@ -32,7 +36,9 @@ namespace IMIS.Application.PolicyAndProcedureHistoryLogModule
             {
                 Id = Id,
                 PolicyAndProcedureId = PolicyAndProcedureId,
-                Date = Date
+                Date = Date,
+                IsControlledCopy = IsControlledCopy,
+                IsMasterCopy = IsMasterCopy,
             };
         }
     }

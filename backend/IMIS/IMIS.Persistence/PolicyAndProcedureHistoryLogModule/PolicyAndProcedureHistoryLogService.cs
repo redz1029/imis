@@ -45,6 +45,8 @@ namespace IMIS.Persistence.PolicyAndProcedureHistoryLogModule
 
                 entity.PolicyAndProcedureId = dto.PolicyAndProcedureId;
                 entity.Date = dto.Date;
+                entity.IsControlledCopy = dto.IsControlledCopy;
+                entity.IsMasterCopy = dto.IsMasterCopy;
 
                 var incomingIds = dto.PolicyAndProcedureLogList
                     .Where(x => x.Id != 0)
