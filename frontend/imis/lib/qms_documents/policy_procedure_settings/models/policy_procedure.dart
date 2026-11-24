@@ -9,6 +9,7 @@ class PolicyProcedure {
   String? rowVersion;
   int numbering;
   String sequence;
+  bool? isFlowChart;
 
   PolicyProcedure({
     required this.id,
@@ -16,6 +17,7 @@ class PolicyProcedure {
     this.rowVersion,
     required this.numbering,
     required this.sequence,
+    this.isFlowChart,
   });
 
   factory PolicyProcedure.fromJson(Map<String, dynamic> json) =>
