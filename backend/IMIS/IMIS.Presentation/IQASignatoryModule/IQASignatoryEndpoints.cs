@@ -32,7 +32,10 @@ namespace IMIS.Presentation.IQASignatoryModule
         private const string _auditReportType = "AuditReport";
         private readonly AuditReportWorkflowPermission _reportWorkflow = new();
 
-        public IQASignatoryEndpoints() : base("IQASignatory")
+        // No base path here: AddRoutes already maps the "IQASignatory" group.
+        // Giving both made every route /IQASignatory/IQASignatory/..., which the
+        // app (it calls /IQASignatory/...) could never reach.
+        public IQASignatoryEndpoints()
         {
         }
 
