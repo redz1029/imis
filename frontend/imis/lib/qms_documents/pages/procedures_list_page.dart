@@ -549,9 +549,10 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                   message: 'Edit',
                   child: IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _openEditorById(p.id),
+                    onPressed: () => _openEditor(proc: p),
                   ),
                 ),
+                //_openEditorById(p.id),
                 Tooltip(
                   message: 'Delete',
                   child: IconButton(
@@ -592,7 +593,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                 color: Theme.of(context).cardColor,
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
-                  if (v == 'edit') _openEditorById(p.id);
+                  if (v == 'edit') _openEditor(proc: p);
                   if (v == 'delete') _confirmDelete(p);
                 },
                 itemBuilder:
