@@ -6,6 +6,7 @@ import 'package:imis/ISO/IQA/ncar/models/nonconforming_action_report.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/ISO/IQA/ncar/widgets/ncar_same_day_rule.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -1091,15 +1092,27 @@ class _NcarFormPageState extends State<NcarFormPage> {
                             context,
                             service: _service,
                             ncar: n,
-                            canEdit:
                             // Same rule as the server: Edit (the auditor who
                             // issued it) or Respond (the office).
+                            canEdit:
                                 !n.isClosed &&
                                 (_can(AppPermissions.editNonconformingActionReport) ||
                                     _can(AppPermissions.nonconformingActionReportRespond)),
                           ),
                           icon: const Icon(Icons.photo_library_outlined, size: 16),
                           label: const Text('Pictures'),
+                        ),
+                      if (n != null)
+                        OutlinedButton.icon(
+                          onPressed: () => ApprovalHistoryDialog.showLoaded(
+                            context,
+                            title: n.referenceNumber.isNotEmpty
+                                ? 'NCAR ${n.referenceNumber}'
+                                : 'NCAR #${n.id}',
+                            load: () => _service.getHistory(n.id),
+                          ),
+                          icon: const Icon(Icons.history, size: 16),
+                          label: const Text('History'),
                         ),
                       if (n != null)
                         OutlinedButton.icon(

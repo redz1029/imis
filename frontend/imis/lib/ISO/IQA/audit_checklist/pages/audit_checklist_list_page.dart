@@ -8,6 +8,8 @@ import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/services/iqa_signatory_service.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
@@ -360,6 +362,22 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
       ),
     );
     if (mounted) _loadSchedules();
+  }
+
+  /// Who assigned the clauses, added or removed a question and answered it, and
+  /// when. The checklist of a schedule is keyed by the schedule's id.
+  void _showHistory(AuditChecklistSummary s) {
+    if (s.auditScheduleId <= 0) {
+      MotionToast.warning(
+        description: const Text('This checklist has no schedule yet.'),
+      ).show(context);
+      return;
+    }
+    ApprovalHistoryDialog.showLoaded(
+      context,
+      title: 'Audit Checklist',
+      load: () => IQASignatoryService(Dio()).getHistory('AuditChecklist', s.auditScheduleId),
+    );
   }
 
   void _printPreview(AuditChecklistSummary s) {
@@ -844,7 +862,7 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
           Expanded(flex: 2, child: Text('Team', style: style)),
           SizedBox(width: 80, child: Text('Clauses', style: style)),
           Expanded(flex: 2, child: Text('Status', style: style)),
-          SizedBox(width: 120, child: Text('Actions', style: style)),
+          SizedBox(width: 160, child: Text('Actions', style: style)),
         ],
       ),
     );
@@ -927,7 +945,7 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
               ),
             ),
             SizedBox(
-              width: 120,
+              width: 160,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -935,6 +953,11 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
                     tooltip: 'Open checklist',
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     onPressed: () => _openChecklist(s),
+                  ),
+                  IconButton(
+                    tooltip: 'History',
+                    icon: const Icon(Icons.history, size: 16),
+                    onPressed: () => _showHistory(s),
                   ),
                   IconButton(
                     tooltip: 'Print preview',
@@ -989,6 +1012,7 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
               icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
               onSelected: (value) {
                 if (value == 'open') _openChecklist(s);
+                if (value == 'history') _showHistory(s);
                 if (value == 'print') _printPreview(s);
               },
               itemBuilder: (_) => const [
@@ -999,6 +1023,16 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
                       Icon(Icons.edit_outlined, size: 18),
                       SizedBox(width: 8),
                       Text('Open checklist'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'history',
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, size: 18),
+                      SizedBox(width: 8),
+                      Text('History'),
                     ],
                   ),
                 ),

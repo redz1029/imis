@@ -9,6 +9,9 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/services/iqa_signatory_service.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -183,6 +186,25 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   /// The schedules of the plan the signed-in user may submit.
   List<AuditSchedules> _submittable(_PlanGroup group) =>
       group.schedules.where(_canSubmit).toList();
+
+  /// The trail of every office's schedule in the plan, oldest first: who
+  /// submitted it and who confirmed or rejected it, with the office on each line.
+  void _showHistory(_PlanGroup group) {
+    ApprovalHistoryDialog.showLoaded(
+      context,
+      title: 'Audit Schedule',
+      heading: 'Approval History',
+      load: () async {
+        final signatories = IQASignatoryService(Dio());
+        final lists = await Future.wait([
+          for (final s in group.schedules) signatories.getHistory('AuditSchedule', s.id),
+        ]);
+        final all = <IQAApprovalHistory>[for (final l in lists) ...l]
+          ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
+        return all;
+      },
+    );
+  }
 
   Widget _submitButton(_PlanGroup group) {
     final count = _submittable(group).length;
@@ -433,7 +455,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                               ),
                             ),
                             const SizedBox(
-                              width: 60,
+                              width: 100,
                               child: Text(
                                 'Actions',
                                 style: TextStyle(
@@ -542,12 +564,19 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           ),
                                         ),
                                         SizedBox(
-                                          width: _submittable(group).isNotEmpty ? 100 : 60,
+                                          width: _submittable(group).isNotEmpty ? 140 : 100,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               if (_submittable(group).isNotEmpty)
                                                 _submitButton(group),
+                                              IconButton(
+                                                tooltip: 'History',
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                                icon: const Icon(Icons.history, size: 16),
+                                                onPressed: () => _showHistory(group),
+                                              ),
                                               IconButton(
                                                 tooltip: 'View Schedule',
                                                 padding: EdgeInsets.zero,
@@ -622,6 +651,11 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                       ),
                                       if (_submittable(group).isNotEmpty)
                                         _submitButton(group),
+                                      IconButton(
+                                        tooltip: 'History',
+                                        icon: Icon(Icons.history, color: Colors.grey.shade500),
+                                        onPressed: () => _showHistory(group),
+                                      ),
                                       IconButton(
                                         tooltip: 'View Schedule',
                                         icon: Icon(

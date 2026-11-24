@@ -294,20 +294,49 @@ class ApprovalHistoryDialog extends StatelessWidget {
   final String title;
   final List<IQAApprovalHistory> history;
 
+  /// What the dialog is called after the title ("Approval History" by default;
+  /// the Checklist and the NCAR have no approval, so they say "History").
+  final String heading;
+
   const ApprovalHistoryDialog({
     super.key,
     required this.title,
     required this.history,
+    this.heading = 'Approval History',
   });
 
   static void show(
     BuildContext context, {
     required String title,
     required List<IQAApprovalHistory> history,
+    String heading = 'Approval History',
   }) {
     showDialog(
       context: context,
-      builder: (_) => ApprovalHistoryDialog(title: title, history: history),
+      builder: (_) => ApprovalHistoryDialog(
+        title: title,
+        history: history,
+        heading: heading,
+      ),
+    );
+  }
+
+  /// Opens the history of a document that is read from the server when the
+  /// dialog opens (Audit Checklist, Audit Report, NCAR, ...): a spinner first,
+  /// then the list, or the reason it could not be loaded.
+  static void showLoaded(
+    BuildContext context, {
+    required String title,
+    required Future<List<IQAApprovalHistory>> Function() load,
+    String heading = 'History',
+  }) {
+    showDialog(
+      context: context,
+      builder: (_) => _LoadedHistoryDialog(
+        title: title,
+        load: load,
+        heading: heading,
+      ),
     );
   }
 
@@ -326,6 +355,24 @@ class ApprovalHistoryDialog extends StatelessWidget {
         return Colors.indigo.shade600;
       case 'revised':
         return Colors.orange.shade800;
+      // NCAR
+      case 'issued':
+        return Colors.indigo.shade600;
+      case 'acknowledged':
+      case 'responded':
+        return Colors.teal.shade700;
+      case 'verified':
+        return Colors.blue.shade700;
+      case 'closed':
+        return Colors.green.shade700;
+      // Audit Checklist
+      case 'clauses assigned':
+      case 'question added':
+        return Colors.indigo.shade600;
+      case 'question removed':
+        return Colors.orange.shade800;
+      case 'answered':
+        return Colors.teal.shade700;
       default:
         return Colors.grey.shade700;
     }
@@ -340,7 +387,7 @@ class ApprovalHistoryDialog extends StatelessWidget {
           const Icon(Icons.history, color: primaryColor, size: 22),
           const SizedBox(width: 8),
           Text(
-            '$title Approval History',
+            '$title $heading',
             style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -354,7 +401,9 @@ class ApprovalHistoryDialog extends StatelessWidget {
         child: history.isEmpty
             ? Center(
                 child: Text(
-                  'No approval history recorded yet.',
+                  heading == 'Approval History'
+                      ? 'No approval history recorded yet.'
+                      : 'No history recorded yet.',
                   style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade500),
                 ),
               )
@@ -588,6 +637,77 @@ class RejectionBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Fetches a document's history when it opens and shows it in the same dialog
+/// as the approval history.
+class _LoadedHistoryDialog extends StatefulWidget {
+  const _LoadedHistoryDialog({
+    required this.title,
+    required this.load,
+    required this.heading,
+  });
+
+  final String title;
+  final Future<List<IQAApprovalHistory>> Function() load;
+  final String heading;
+
+  @override
+  State<_LoadedHistoryDialog> createState() => _LoadedHistoryDialogState();
+}
+
+class _LoadedHistoryDialogState extends State<_LoadedHistoryDialog> {
+  // Loaded once: a rebuild must not fetch the history again.
+  late final Future<List<IQAApprovalHistory>> _future = widget.load();
+
+  String get title => widget.title;
+  String get heading => widget.heading;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<IQAApprovalHistory>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            content: const SizedBox(
+              width: 280,
+              height: 90,
+              child: Center(child: CircularProgressIndicator(color: primaryColor)),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          final message = snapshot.error.toString().replaceFirst('Exception: ', '');
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: Text(
+              '$title $heading',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            content: Text(
+              'The history could not be loaded. $message',
+              style: const TextStyle(color: Colors.red),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        }
+
+        return ApprovalHistoryDialog(
+          title: title,
+          history: snapshot.data ?? const [],
+          heading: heading,
+        );
+      },
     );
   }
 }

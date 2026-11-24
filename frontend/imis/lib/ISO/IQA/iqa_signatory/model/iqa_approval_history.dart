@@ -39,7 +39,11 @@ class IQAApprovalHistory {
     DateTime parsedDate;
     final rawDate = json['actionDate'] ?? json['ActionDate'];
     if (rawDate is String) {
-      parsedDate = DateTime.tryParse(rawDate) ?? DateTime.now();
+      // The server stores UTC and sends the time without a "Z"; read as UTC so
+      // the history shows the local time of the action, not the UTC clock.
+      final hasZone = RegExp(r'(Z|[+-]\d{2}:?\d{2})$').hasMatch(rawDate);
+      parsedDate = DateTime.tryParse(hasZone ? rawDate : '${rawDate}Z') ??
+          DateTime.now();
     } else {
       parsedDate = DateTime.now();
     }

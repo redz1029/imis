@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import '../models/ncar_attachment.dart';
@@ -227,6 +228,24 @@ class NcarService {
     if (data is String && data.isNotEmpty) return data;
     if (data is Map && data['error'] != null) return data['error'].toString();
     return fallback;
+  }
+
+  /// The "who did what, when" trail of one NCAR, oldest first: issued,
+  /// acknowledged, response written, approved, verified and closed.
+  Future<List<IQAApprovalHistory>> getHistory(int ncarId) async {
+    try {
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '${ApiEndpoint().ncar}/$ncarId/history',
+      );
+      final data = response.data;
+      if (response.statusCode != 200 || data is! List) {
+        throw Exception('Failed to load the NCAR history.');
+      }
+      return IQAApprovalHistory.listFromJson(data);
+    } on DioException catch (e) {
+      throw Exception(_errorText(e, 'Failed to load the NCAR history.'));
+    }
   }
 
   Future<List<NcarAttachment>> getAttachments(int ncarId) async {

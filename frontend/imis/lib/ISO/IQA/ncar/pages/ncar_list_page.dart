@@ -10,6 +10,7 @@ import 'package:imis/ISO/IQA/ncar/pages/ncar_monitoring_print_preview_page.dart'
 import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/ISO/IQA/ncar/widgets/ncar_same_day_rule.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -430,6 +431,17 @@ class _NcarListPageState extends State<NcarListPage> {
                                           ),
                                           icon: const Icon(Icons.photo_library_outlined, size: 16),
                                           label: const Text('Pictures'),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: () => ApprovalHistoryDialog.showLoaded(
+                                            context,
+                                            title: n.referenceNumber.isNotEmpty
+                                                ? 'NCAR ${n.referenceNumber}'
+                                                : 'NCAR #${n.id}',
+                                            load: () => _service.getHistory(n.id),
+                                          ),
+                                          icon: const Icon(Icons.history, size: 16),
+                                          label: const Text('History'),
                                         ),
                                         OutlinedButton.icon(
                                           onPressed: () => openNcarPrintPreview(context, n.id),

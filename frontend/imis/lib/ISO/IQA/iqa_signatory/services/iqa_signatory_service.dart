@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory_template.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -95,6 +96,33 @@ class IQASignatoryService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 204) return [];
       rethrow;
+    }
+  }
+
+  /// `GET /IQASignatory/history/{auditEntityType}/{auditEntityId}`
+  /// The "who did what, when" trail of one audit entity (AuditChecklist,
+  /// AuditReport, AuditSchedule, ...), oldest first. The id of an Audit
+  /// Checklist is the id of its Audit Schedule.
+  Future<List<IQAApprovalHistory>> getHistory(
+    String auditEntityType,
+    int auditEntityId,
+  ) async {
+    final url =
+        '$_baseUrl/history/${Uri.encodeComponent(auditEntityType)}/$auditEntityId';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        return IQAApprovalHistory.listFromJson(_asList(response, url));
+      }
+      // AuthenticatedRequest turns a failed request into a non-200 response, so
+      // it must be reported here, not shown as an empty history.
+      throw Exception(
+        'The server answered ${response.statusCode ?? 'with an error'} '
+        '(${response.statusMessage ?? 'no message'}). '
+        'Restart the backend if it was not restarted after the update.',
+      );
+    } on DioException catch (e) {
+      throw Exception(_errorMessage(e, 'Failed to load the history.'));
     }
   }
 
