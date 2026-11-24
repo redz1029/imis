@@ -40,6 +40,19 @@ class PolicyProcedureService {
     }
   }
 
+  Future<List<PolicyProcedure>> getAllPolicyProcedures() async {
+    final response = await AuthenticatedRequest.get(
+      dio,
+      ApiEndpoint().policyAndProcedureSectionNumbering,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load policy and procedures');
+    }
+    return (response.data as List)
+        .map((e) => PolicyProcedure.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> deletePolicyProcedure(String id) async {
     final url = '${ApiEndpoint().policyAndProcedureSectionNumbering}/$id';
     await AuthenticatedRequest.delete(dio, url);
