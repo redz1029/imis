@@ -423,7 +423,10 @@ class _NcarListPageState extends State<NcarListPage> {
                                             context,
                                             service: _service,
                                             ncar: n,
-                                            canEdit: _can(AppPermissions.nonconformingActionReportRespond),
+                                            canEdit:
+                                                !n.isClosed &&
+                                                (_can(AppPermissions.editNonconformingActionReport) ||
+                                                    _can(AppPermissions.nonconformingActionReportRespond)),
                                           ),
                                           icon: const Icon(Icons.photo_library_outlined, size: 16),
                                           label: const Text('Pictures'),

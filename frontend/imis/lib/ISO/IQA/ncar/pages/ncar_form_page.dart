@@ -1092,8 +1092,11 @@ class _NcarFormPageState extends State<NcarFormPage> {
                             service: _service,
                             ncar: n,
                             canEdit:
+                            // Same rule as the server: Edit (the auditor who
+                            // issued it) or Respond (the office).
                                 !n.isClosed &&
-                                _can(AppPermissions.nonconformingActionReportRespond),
+                                (_can(AppPermissions.editNonconformingActionReport) ||
+                                    _can(AppPermissions.nonconformingActionReportRespond)),
                           ),
                           icon: const Icon(Icons.photo_library_outlined, size: 16),
                           label: const Text('Pictures'),
