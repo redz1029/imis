@@ -895,7 +895,13 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager,
                 new AuditProgrammePermission(),
                 new AuditPlanPermission(),
-                new AuditSchedulePermission());
+                new AuditSchedulePermission(),
+                new AuditReportPermission());
+            // ...and acknowledges the Audit Report of the office (the
+            // "Acknowledged by: Auditee/Head of Office" signature). Only the
+            // Approve step is given: the head cannot submit, reject or edit it.
+            await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager,
+                new AuditReportWorkflowPermission().CanApprove);
 
             // Auditor: works on checklists, reports and NCARs.
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
