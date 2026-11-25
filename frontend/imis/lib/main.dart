@@ -56,6 +56,8 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
