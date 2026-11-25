@@ -7,8 +7,8 @@ import 'package:imis/constant/constant.dart';
 const double kFlowW = 602;
 const double kFlowH = 640;
 const double kFlowHeaderH = 46;
-const double kFlowLeftW = 140;
-const double kFlowMidW = 300;
+const double kFlowLeftW = 120;
+const double kFlowMidW = 360;
 const double kFlowRightW = kFlowW - kFlowLeftW - kFlowMidW;
 
 const double _kPad = 8;
@@ -34,11 +34,11 @@ extension FlowShapeX on FlowShape {
   };
 
   Size get size => switch (this) {
-    FlowShape.terminator => const Size(104, 40),
-    FlowShape.process => const Size(128, 52),
-    FlowShape.decision => const Size(124, 80),
-    FlowShape.io => const Size(128, 52),
-    FlowShape.connector => const Size(36, 36),
+    FlowShape.terminator => const Size(84, 32),
+    FlowShape.process => const Size(100, 42),
+    FlowShape.decision => const Size(108, 68),
+    FlowShape.io => const Size(100, 42),
+    FlowShape.connector => const Size(30, 30),
   };
 
   String get defaultText => switch (this) {
