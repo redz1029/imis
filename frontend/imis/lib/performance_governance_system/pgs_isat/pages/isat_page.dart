@@ -756,7 +756,7 @@ class IsatPageState extends State<IsatPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Strategic Alignment Management Matrix (SPAM)",
+                  "Strategic Performance Alignment Management Matrix (SPAM)",
                   style: TextStyle(
                     fontSize: isXSmall ? 12 : (isSmall ? 14 : 16),
                     fontWeight: FontWeight.bold,
