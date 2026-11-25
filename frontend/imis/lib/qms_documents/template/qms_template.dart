@@ -82,6 +82,12 @@ const String syncListScript = r'''
       '  padding: 16px 24px !important; box-sizing: border-box !important;' +
       '}' +
       '.note-editable > p:first-child { margin-top: 0 !important; }';
+            '.note-editable > p:first-child { margin-top: 0 !important; }' +
+      '.note-editable, .note-editable p, .note-editable div, .note-editable li,' +
+      '.note-editable td, .note-editable th, .note-editor .note-placeholder {' +
+      '  font-family: "Times New Roman", Times, serif !important;' +
+      '  font-size: 12pt;' +
+      '}';
   } catch (e) {}
 })();
 ''';
