@@ -15,6 +15,7 @@ namespace IMIS.Application.PolicyAndProcedureSignatoryModule
         public string? Status { get; set; }
         public int OrderLevel { get; set; }
         public bool IsNextStatus { get; set; }
+        public string? Position { get; set; }
 
         public PolicyAndProcedureSignatoryDto() { }
 

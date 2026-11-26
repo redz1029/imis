@@ -258,7 +258,7 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(),
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
-                new PgsDeliverableAccomplishmentPermission(),
+                new PgsDeliverableAccomplishmentPermission(),   
                 new BreakThroughScoringPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new KraRoadMapPermission(),
