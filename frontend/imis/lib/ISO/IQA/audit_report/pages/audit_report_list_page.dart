@@ -10,7 +10,6 @@ import 'package:imis/ISO/IQA/audit_report/pages/audit_report_page.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
-import 'package:imis/ISO/IQA/iqa_signatory/services/iqa_signatory_service.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
@@ -86,7 +85,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
   final int _pageSize = 15;
   bool _isLoading = false;
   bool _isAdmin = false;
-  String? _userId;
   final Set<int> _busyReportIds = {};
 
   // The workflow buttons follow the permissions switched on for the user in
@@ -104,9 +102,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     _fetchReports();
     AuthUtil.isCurrentUserAdmin().then((val) {
       if (mounted) setState(() => _isAdmin = val);
-    });
-    AuthUtil.fetchLoggedUser().then((user) {
-      if (mounted) setState(() => _userId = user?.id);
     });
   }
 
@@ -434,16 +429,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     }
   }
 
-  /// Who submitted, approved, noted or rejected the report, and when.
-  void _showHistory(AuditReport report) {
-    ApprovalHistoryDialog.showLoaded(
-      context,
-      title: 'Audit Report',
-      heading: 'Approval History',
-      load: () => IQASignatoryService(Dio()).getHistory('AuditReport', report.id),
-    );
-  }
-
   /// Shows the chain and, when [signatory] is the one whose turn it is, offers
   /// the Approve / Disapprove actions.
   Future<void> _showApprovalDialog(AuditReport report) async {
@@ -534,13 +519,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
             if (!approval.isDraft &&
                 !approval.isFullyApproved &&
                 !approval.isDisapproved &&
-                // Only the signatory whose turn it is (or an admin) decides: the
-                // department head sees the button at "Acknowledged by", not
-                // at a step that belongs to someone else.
-                (_isAdmin ||
-                    (next != null &&
-                        _userId != null &&
-                        next.signatoryId == _userId))) ...[
+                (next != null || _isAdmin)) ...[
               if (_canReject)
                 TextButton(
                   onPressed: () {
@@ -558,11 +537,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                     _recordAdminDecision(report, next, true);
                   },
                   child: Text(
-                    (next?.signatoryLabel ?? '')
-                            .toLowerCase()
-                            .contains('acknowledg')
-                        ? 'Acknowledge'
-                        : (_canApprove ? 'Approve' : 'Note'),
+                    _canApprove ? 'Approve' : 'Note',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -862,7 +837,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                               ),
                             ),
                             const SizedBox(
-                              width: 160,
+                              width: 120,
                               child: Text(
                                 'Actions',
                                 style: TextStyle(
@@ -975,7 +950,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                             ),
                                           ),
                                           SizedBox(
-                                            width: 160,
+                                            width: 120,
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
@@ -988,11 +963,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                                       () => _openForm(
                                                         reportId: report.id,
                                                       ),
-                                                ),
-                                                IconButton(
-                                                  tooltip: 'History',
-                                                  icon: const Icon(Icons.history, size: 16),
-                                                  onPressed: () => _showHistory(report),
                                                 ),
                                                 IconButton(
                                                   tooltip: 'Print Preview',
@@ -1084,9 +1054,6 @@ Text(                                                _reference(report),        
                                             if (value == 'delete') {
                                               _showDeleteDialog(report);
                                             }
-                                            if (value == 'history') {
-                                              _showHistory(report);
-                                            }
                                             if (value == 'approval') {
                                               _showApprovalDialog(report);
                                             }
@@ -1122,16 +1089,6 @@ Text(                                                _reference(report),        
                                                       ),
                                                       SizedBox(width: 8),
                                                       Text('Edit'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'history',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.history, size: 18),
-                                                      SizedBox(width: 8),
-                                                      Text('History'),
                                                     ],
                                                   ),
                                                 ),

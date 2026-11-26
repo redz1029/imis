@@ -13,8 +13,6 @@ import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.da
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
-import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
-import 'package:imis/ISO/IQA/iqa_signatory/services/iqa_signatory_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/pdf_download.dart';
 
@@ -61,10 +59,6 @@ class _Data {
     required this.commendable,
     required this.findings,
     required this.conclusions,
-    this.preparedBy = '',
-    this.preparedDate,
-    this.acknowledgedBy = '',
-    this.acknowledgedDate,
   });
 
   final String office;
@@ -77,13 +71,6 @@ class _Data {
   final List<({String finding, String area})> commendable;
   final List<_Line> findings;
   final String conclusions;
-
-  /// Who prepared the report (the audit team leader who submitted it) and who
-  /// acknowledged it (the auditee / head of office), with the dates.
-  final String preparedBy;
-  final DateTime? preparedDate;
-  final String acknowledgedBy;
-  final DateTime? acknowledgedDate;
 }
 
 class _Loaded {
@@ -110,42 +97,11 @@ List<String> _names(String? raw) => (raw ?? '')
     .where((e) => e.isNotEmpty)
     .toList();
 
-/// The signers, read from the report's approval history: the latest
-/// submission is the preparer; the latest approval at the "Acknowledged by"
-/// step (or an Acknowledged entry) after it is the acknowledger.
-({String preparedBy, DateTime? preparedDate, String acknowledgedBy, DateTime? acknowledgedDate})
-    _signersOf(List<IQAApprovalHistory> history) {
-  final rows = [...history]..sort((a, b) => a.actionDate.compareTo(b.actionDate));
-  IQAApprovalHistory? prepared;
-  IQAApprovalHistory? acknowledged;
-  for (final h in rows) {
-    final action = h.action.toLowerCase();
-    if (action == 'submitted' || action == 'resubmitted') {
-      prepared = h;
-      acknowledged = null; // a new submission starts the signing again
-    } else if (action == 'acknowledged' ||
-        (action == 'approved' &&
-            (h.roleOrPosition ?? '').toLowerCase().contains('acknowledg'))) {
-      acknowledged = h;
-    } else if (action == 'rejected') {
-      acknowledged = null;
-    }
-  }
-  return (
-    preparedBy: prepared?.effectiveUserName ?? '',
-    preparedDate: prepared?.actionDate.toLocal(),
-    acknowledgedBy: acknowledged?.effectiveUserName ?? '',
-    acknowledgedDate: acknowledged?.actionDate.toLocal(),
-  );
-}
-
 _Data _dataFrom(
   AuditReport r, {
   required Map<int, String> statusNames,
   required String auditors,
-  List<IQAApprovalHistory> history = const [],
 }) {
-  final signers = _signersOf(history);
   final summary = [...(r.auditSummaryFindings ?? const [])]
     ..sort((a, b) => a.no.compareTo(b.no));
 
@@ -192,10 +148,6 @@ _Data _dataFrom(
         }(),
     ],
     conclusions: r.auditConclusions.trim(),
-    preparedBy: signers.preparedBy,
-    preparedDate: signers.preparedDate,
-    acknowledgedBy: signers.acknowledgedBy,
-    acknowledgedDate: signers.acknowledgedDate,
   );
 }
 
@@ -233,13 +185,6 @@ Future<_Loaded> _loadAll(int reportId) async {
     debugPrint('Audit report print preview: could not load statuses: $e');
   }
 
-  var history = <IQAApprovalHistory>[];
-  try {
-    history = await IQASignatoryService(dio).getHistory('AuditReport', reportId);
-  } catch (e) {
-    debugPrint('Audit report print preview: could not load the history: $e');
-  }
-
   pw.Font regular;
   pw.Font bold;
   var unicode = true;
@@ -273,12 +218,7 @@ Future<_Loaded> _loadAll(int reportId) async {
   }
 
   return _Loaded(
-    data: _dataFrom(
-      report,
-      statusNames: statusNames,
-      auditors: auditors,
-      history: history,
-    ),
+    data: _dataFrom(report, statusNames: statusNames, auditors: auditors),
     regular: regular,
     bold: bold,
     unicode: unicode,
@@ -733,34 +673,21 @@ class _ReportPdfBuilder {
     );
   }
 
-  pw.Widget _signature(String label, String role, String name, DateTime? date) =>
-      pw.Expanded(
+  pw.Widget _signature(String label, String role) => pw.Expanded(
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             _t(label, size: 9.5),
             pw.SizedBox(height: 30),
-            // The name sits on the signature line, as on the paper form.
             pw.Container(
               width: 170,
-              constraints: const pw.BoxConstraints(minHeight: 12),
               decoration: pw.BoxDecoration(
-                border: pw.Border(bottom: _bs),
+                border: pw.Border(top: _bs),
               ),
-              child: name.isEmpty
-                  ? pw.SizedBox()
-                  : _t(name.toUpperCase(), bold: true, size: _kSmall + 0.5),
-            ),
-            pw.Padding(
               padding: const pw.EdgeInsets.only(top: 2),
               child: _t(role, size: _kSmall),
             ),
-            _t(
-              date == null
-                  ? 'Date:'
-                  : 'Date: ${DateFormat('MMMM d, yyyy').format(date)}',
-              size: _kSmall,
-            ),
+            _t('Date:', size: _kSmall),
           ],
         ),
       );
@@ -793,18 +720,8 @@ class _ReportPdfBuilder {
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              _signature(
-                'PREPARED BY:',
-                'Audit Team Leader',
-                d.preparedBy,
-                d.preparedDate,
-              ),
-              _signature(
-                'ACKNOWLEDGED BY:',
-                'Auditee/Head of Office',
-                d.acknowledgedBy,
-                d.acknowledgedDate,
-              ),
+              _signature('PREPARED BY:', 'Audit Team Leader'),
+              _signature('ACKNOWLEDGED BY:', 'Auditee/Head of Office'),
             ],
           ),
         ],
