@@ -96,6 +96,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .Include(p => p.HistoryLogs)
                     .ThenInclude(h => h.HistoryLogLists)
                 .Include(p => p.DCRRFs)
+                .Include(p => p.OfficeDocumentDistributions)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }

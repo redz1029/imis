@@ -247,6 +247,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             EnsureHistoryLog(pap);
             EnsureDCRRF(pap);
+            EnsureOfficeDocumentDistribution(pap);
 
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
@@ -299,6 +300,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             var isLastTemplateSignatory = current.PAPSignatoryTemplateId.HasValue && !hasRemainingSignatory;
 
             var historyLog = EnsureHistoryLog(pap);
+            var distribution = EnsureOfficeDocumentDistribution(pap);
 
             if (isLastTemplateSignatory)
             {
@@ -307,6 +309,9 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
                 historyLog.IsMasterCopy = true;
                 historyLog.IsControlledCopy = true;
+
+                distribution.IsMasterCopy = true;
+                distribution.IsControlledCopy = true;
             }
 
             EnsureDCRRF(pap);
@@ -367,6 +372,29 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             return dcrrf;
         }
+        private PolicyAndProcedureOfficeDocumentDistribution EnsureOfficeDocumentDistribution(PolicyAndProcedure pap)
+        {
+            pap.OfficeDocumentDistributions ??= new List<PolicyAndProcedureOfficeDocumentDistribution>();
+
+            var distribution = pap.OfficeDocumentDistributions
+                .Where(d => !d.IsDeleted)
+                .OrderByDescending(d => d.Id)
+                .FirstOrDefault();
+
+            if (distribution == null)
+            {
+                distribution = new PolicyAndProcedureOfficeDocumentDistribution
+                {
+                    Id = 0,
+                    PolicyAndProcedureId = pap.Id
+                };
+
+                pap.OfficeDocumentDistributions.Add(distribution);
+            }
+
+            return distribution;
+        }
+
 
         private async Task<PolicyAndProcedure> SaveFieldsAsync(PolicyAndProcedureDto dto, CancellationToken ct)
         {
@@ -379,6 +407,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 pap.PAPSignatories = new List<PolicyAndProcedureSignatory>();
                 pap.HistoryLogs = new List<PolicyAndProcedureHistoryLog>();
                 pap.DCRRFs = new List<PolicyAndProcedureDCRRF>();
+                pap.OfficeDocumentDistributions = new List<PolicyAndProcedureOfficeDocumentDistribution>();
                 context.Set<PolicyAndProcedure>().Add(pap);
             }
             else
@@ -492,6 +521,16 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     }.Where(x => !string.IsNullOrWhiteSpace(x)));
             }
 
+            string? PositionOf(string? id)
+            {
+                if (string.IsNullOrWhiteSpace(id) ||
+                    !users.TryGetValue(id, out var user))
+                {
+                    return null;
+                }
+
+                return user.Position;   
+            }
             var list = new List<PolicyAndProcedureSignatoryDto>();
 
             foreach (var s in saved)
@@ -522,6 +561,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     PAPSignatoryTemplateId = s.PAPSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
                     SignatoryName = FullName(s.SignatoryId),
+                    Position = PositionOf(s.SignatoryId),
                     Label = label,
                     OrderLevel = order,
                     Status = s.DateSigned != default ? PolicyAndProcedureStatus.Prepared : PolicyAndProcedureStatus.Pending,
@@ -540,6 +580,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     SignatoryId = officeHeadId,
                     SignatoryName = FullName(officeHeadId),
                     Label = PolicyAndProcedureStatus.OfficeHead,
+                    Position = PositionOf(officeHeadId),
                     OrderLevel = 0,
                     Status = PolicyAndProcedureStatus.Pending,
                     IsNextStatus = false
@@ -567,6 +608,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     PAPSignatoryTemplateId = template.Id > 0 ? template.Id : null,
                     SignatoryId = template.DefaultSignatoryId!,
                     SignatoryName = FullName(template.DefaultSignatoryId),
+                    Position = PositionOf(template.DefaultSignatoryId),
                     Label = template.SignatoryLabel,
                     OrderLevel = template.OrderLevel,
                     Status = PolicyAndProcedureStatus.Pending,

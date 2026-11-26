@@ -20,5 +20,6 @@ namespace IMIS.Domain
         public virtual ICollection<PolicyAndProcedureSignatory> PAPSignatories { get; set; } = new List<PolicyAndProcedureSignatory>();
         public virtual ICollection<PolicyAndProcedureHistoryLog> HistoryLogs { get; set; } = new List<PolicyAndProcedureHistoryLog>();
         public virtual ICollection<PolicyAndProcedureDCRRF> DCRRFs { get; set; } = new List<PolicyAndProcedureDCRRF>();
+        public virtual ICollection<PolicyAndProcedureOfficeDocumentDistribution> OfficeDocumentDistributions { get; set; } = new List<PolicyAndProcedureOfficeDocumentDistribution>();
     }
 }
