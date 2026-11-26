@@ -24,7 +24,7 @@ using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
-using IMIS.Application.PerfomanceGovernanceSystemModule;    
+using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PerformanceValidationToolModule;
 using IMIS.Application.PerformanceValidationToolPeriodModule;
 using IMIS.Application.PermissionSettings;
@@ -37,6 +37,7 @@ using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
+using IMIS.Application.PolicyAndProcedureSectionNumberingModule;
 using IMIS.Application.StrategicChangeAgendaModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.SWOTAnalysisModule;
@@ -102,7 +103,8 @@ namespace IMIS.Infrastructure.Auths
                new NonconformingActionReportPermission(),
                new ISATPermission(),
                new PolicyAndProcedurePermission(),
-               new PolicyAndProcedureHistoryLogPermission());
+               new PolicyAndProcedureHistoryLogPermission(),
+               new PolicyAndProcedureSectionNumberingPermission());
 
             // This will specific permissions for a role
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -136,7 +138,8 @@ namespace IMIS.Infrastructure.Auths
                 new NonconformingActionReportPermission(),
                 new ISATPermission(),
                 new PolicyAndProcedurePermission(),
-                new PolicyAndProcedureHistoryLogPermission());
+                new PolicyAndProcedureHistoryLogPermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -153,7 +156,8 @@ namespace IMIS.Infrastructure.Auths
                 new CalendarActivityPermission(),
                 new AuditPlanPermission(),
                 new AuditSchedulePermission(),
-                new NonconformingActionReportPermission());
+                new NonconformingActionReportPermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             // This will seed specific permission to disapprove for MCC role
             // This is only a sample implementation, @Wilbur please adjust as needed.
@@ -166,9 +170,9 @@ namespace IMIS.Infrastructure.Auths
               new PerformanceGovernanceSystemPermission().Confirm);
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
-                new PgsDeliverableAuditorPermission(),              
-                new KeyResultAreaPermission(), 
-                new PgsPeriodPermission(), 
+                new PgsDeliverableAuditorPermission(),
+                new KeyResultAreaPermission(),
+                new PgsPeriodPermission(),
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
@@ -205,7 +209,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermission(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedurePermission(),
-                new PolicyAndProcedureHistoryLogPermission());
+                new PolicyAndProcedureHistoryLogPermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
@@ -244,7 +249,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -287,20 +293,21 @@ namespace IMIS.Infrastructure.Auths
                 new ISATPermission(),
                 new PolicyAndProcedurePermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
-            await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
+            await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
-                new PerformanceGovernanceSystemPermission(),               
+                new PerformanceGovernanceSystemPermission(),
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -320,7 +327,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MCC, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -336,7 +344,7 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPeriodPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -358,7 +366,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedurePermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -373,8 +382,8 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
                 new StrategyReviewPermission(),
-                new SWOTAnalysisPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new SWOTAnalysisPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -394,9 +403,10 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
-            await PermissionSeeder.SeedPermissionForRole<PgsAuditorHead, IdentityRole>(_roleManager,              
+            await PermissionSeeder.SeedPermissionForRole<PgsAuditorHead, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
                 new PgsDeliverableAuditorPermission(),
                 new PgsPeriodPermission(),
@@ -409,9 +419,9 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -432,7 +442,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<ServiceOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -441,8 +452,8 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPeriodPermission(),   
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPeriodPermission(),
                 new PerformanceValidationToolPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -462,16 +473,17 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<ResearchOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -492,16 +504,17 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<TrainingOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -522,18 +535,19 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<LinkagesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission(), 
+                new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
-                new OperationReviewProtocolPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -553,16 +567,17 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FacilitiesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission(), 
+                new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -582,17 +597,18 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FinanceOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission(), 
+                new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -612,17 +628,18 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<InformationOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -642,16 +659,17 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<HROfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission(), 
+                new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
-                new OperationReviewProtocolPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
+                new OperationReviewProtocolPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -672,17 +690,18 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermission(),
                 new StrategyReviewPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<SafetyOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
-                new PerformanceValidationToolPermission(), 
+                new StrategyReviewPermission(),
+                new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
@@ -702,7 +721,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<TWG, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -717,9 +737,9 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KraRoadMapAccomplishmentPermission(),
-                new KraRoadMapKpiAccomplishmentPermission(), 
+                new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -740,7 +760,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MSGC, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -757,7 +778,7 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -778,9 +799,10 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
-            await PermissionSeeder.SeedPermissionForRole<PgsEvaluatorRole, IdentityRole>(_roleManager,                
+            await PermissionSeeder.SeedPermissionForRole<PgsEvaluatorRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
                 new PgsDeliverableAuditorPermission(),
                 new PgsPeriodPermission(),
@@ -795,7 +817,7 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission(), 
+                new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
@@ -817,7 +839,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
                 new PolicyAndProcedureHistoryLogPermission(),
-                new PolicyAndProcedurePermission());
+                new PolicyAndProcedurePermission(),
+                new PolicyAndProcedureSectionNumberingPermission());
 
             // -----------------------------------------------------------------
             // IQA (ISO) roles. Each role gets the permission classes of the
@@ -895,13 +918,7 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager,
                 new AuditProgrammePermission(),
                 new AuditPlanPermission(),
-                new AuditSchedulePermission(),
-                new AuditReportPermission());
-            // ...and acknowledges the Audit Report of the office (the
-            // "Acknowledged by: Auditee/Head of Office" signature). Only the
-            // Approve step is given: the head cannot submit, reject or edit it.
-            await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager,
-                new AuditReportWorkflowPermission().CanApprove);
+                new AuditSchedulePermission());
 
             // Auditor: works on checklists, reports and NCARs.
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
@@ -955,7 +972,7 @@ namespace IMIS.Infrastructure.Auths
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
-                
+
         }
 
         /// <summary>The permission values (Add, View, CanSubmit ...) of the given permission classes.</summary>
