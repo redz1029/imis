@@ -66,6 +66,7 @@ using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PolicyAndProcedureDCRRFModule;
 using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
+using IMIS.Application.PolicyAndProcedureOfficeDocumentDistributionModule;
 using IMIS.Application.PolicyAndProcedureSectionNumberingModule;
 using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
 using IMIS.Application.ServiceHeadOfficesModule;
@@ -148,6 +149,7 @@ using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.PolicyAndProcedureDCRRFModule;
 using IMIS.Persistence.PolicyAndProcedureHistoryLogModule;
 using IMIS.Persistence.PolicyAndProcedureModule;
+using IMIS.Persistence.PolicyAndProcedureOfficeDocumentDistributionModule;
 using IMIS.Persistence.PolicyAndProcedureSectionNumberingModule;
 using IMIS.Persistence.PolicyAndProcedureSignatoryTemplateModule;
 using IMIS.Persistence.ServiceHeadOfficesModule;
@@ -354,6 +356,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPolicyAndProcedureSectionNumberingRepository, PolicyAndProcedureSectionNumberingRepository>();
             services.AddScoped<IPolicyAndProcedureSectionNumberingService, PolicyAndProcedureSectionNumberingService>();
+
+            services.AddScoped<IPolicyAndProcedureOfficeDocumentDistributionRepository, PolicyAndProcedureOfficeDocumentDistributionRepository>();
+            services.AddScoped<IPolicyAndProcedureOfficeDocumentDistributionService, PolicyAndProcedureOfficeDocumentDistributionService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

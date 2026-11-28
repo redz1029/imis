@@ -21,6 +21,7 @@ namespace IMIS.Application.PolicyAndProcedureOfficeDocumentDistributionModule
         {
             Id = entity.Id;
             PolicyAndProcedureId = entity.PolicyAndProcedureId;
+            PostingDate = entity.PostingDate;
             IsControlledCopy = entity.IsControlledCopy;
             IsMasterCopy = entity.IsMasterCopy;
             OfficeDocumentDistributionList = entity.OfficeDocumentDistributionList?
@@ -35,9 +36,10 @@ namespace IMIS.Application.PolicyAndProcedureOfficeDocumentDistributionModule
             {
                 Id = Id,
                 PolicyAndProcedureId = PolicyAndProcedureId,
+                PostingDate = PostingDate,
                 IsControlledCopy = IsControlledCopy,
                 IsMasterCopy = IsMasterCopy,
             };
-        }      
+        }
     }
 }
